@@ -1,0 +1,18 @@
+{
+    "main_hero_image": "assets/hh_hero.jpg",
+    "property_hero_overrides": [],
+    "listing_booking": {
+        "chalet": {
+            "min_nights": 2,
+            "ical_url": "https://www.airbnb.com/calendar/ical/608635403291162192.ics?t=42fbf3eecfdf490098178b0340735bf8&locale=en"
+        },
+        "home": {
+            "min_nights": 3,
+            "ical_url": "https://www.airbnb.com/calendar/ical/49479938.ics?t=ac7b15a335bc4e1e8cf69a9be2b55d8e&locale=en"
+        },
+        "villa": {
+            "min_nights": 4,
+            "ical_url": "https://www.airbnb.com/calendar/ical/1278298080134872974.ics?t=76ead3ee902646f291a634afb68e1272&locale=en"
+        }
+    }
+}
