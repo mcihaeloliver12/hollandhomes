@@ -2205,13 +2205,13 @@ body.home-page .btn-secondary:hover {
 }
 
 .home-hero-grid {
-  grid-template-columns: minmax(320px, 0.54fr) minmax(820px, 1.46fr);
-  gap: clamp(1.8rem, 4vw, 4.4rem);
+  grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
+  gap: clamp(1.6rem, 3.2vw, 3.2rem);
   align-items: start;
 }
 
 .home-hero-copy {
-  padding-top: 1.8rem;
+  padding-top: 1.2rem;
   position: relative;
   z-index: 2;
   max-width: 35rem;
@@ -2227,9 +2227,9 @@ body.home-page .btn-secondary:hover {
 }
 
 .home-hero h1 {
-  max-width: 8.8ch;
-  font-size: clamp(3.9rem, 5.1vw + 0.8rem, 6.7rem);
-  line-height: 0.9;
+  max-width: 11.2ch;
+  font-size: clamp(3.25rem, 4.1vw + 0.9rem, 5.45rem);
+  line-height: 0.92;
   color: var(--text-primary);
   text-shadow: none;
 }
@@ -2297,17 +2297,21 @@ body.home-page .btn-secondary:hover {
   display: grid;
   gap: 0;
   align-items: start;
-  justify-self: end;
-  width: min(100%, 84rem);
-  margin-right: -16vw;
-  padding-bottom: 5.8rem;
+  justify-self: stretch;
+  width: 100%;
+  max-width: min(100%, 58rem);
+  margin-left: auto;
+  margin-right: 0;
+  min-width: 0;
+  padding-bottom: clamp(4.2rem, 7vw, 5.8rem);
   position: relative;
   z-index: 1;
 }
 
 .home-hero-stage {
   position: relative;
-  height: clamp(44rem, 62vw, 56rem);
+  width: 100%;
+  height: clamp(32rem, 50vw, 45rem);
   margin: 0;
   overflow: hidden;
   border: 1px solid rgba(30, 23, 19, 0.12);
@@ -2920,13 +2924,23 @@ body.home-page .btn-secondary:hover {
   }
 
   .home-hero-media {
-    margin-right: 0;
     width: 100%;
+    max-width: 100%;
     padding-bottom: 0;
   }
 
+  .home-hero-copy {
+    max-width: 100%;
+    padding-top: 0;
+  }
+
+  .home-hero h1 {
+    max-width: 11.4ch;
+    font-size: clamp(2.8rem, 5.6vw, 4.4rem);
+  }
+
   .home-hero-stage {
-    height: clamp(34rem, 72vw, 42rem);
+    height: clamp(29rem, 72vw, 40rem);
   }
 
   .home-hero-rail {
@@ -2945,12 +2959,13 @@ body.home-page .btn-secondary:hover {
   }
 
   .home-hero {
-    padding-top: 6.8rem;
+    padding-top: 5.9rem;
   }
 
   .home-hero h1 {
-    font-size: clamp(3rem, 13vw, 4.6rem);
-    max-width: 7.4ch;
+    font-size: clamp(2.35rem, 11vw, 3.5rem);
+    line-height: 0.95;
+    max-width: 12ch;
   }
 
   .home-hero-media,
@@ -2963,7 +2978,7 @@ body.home-page .btn-secondary:hover {
   }
 
   .home-hero-stage {
-    height: 20rem;
+    height: 18rem;
   }
 
   .home-hero-stage-caption {
@@ -2976,7 +2991,7 @@ body.home-page .btn-secondary:hover {
   .residence-ledger {
     grid-template-columns: 1fr;
     width: 100%;
-    margin: 0.9rem 0 0;
+    margin: 0.7rem 0 0;
   }
 
   .home-ledger-card {
@@ -3004,6 +3019,19 @@ body.home-page .btn-secondary:hover {
     width: 100%;
   }
 
+  .home-hero-proof {
+    margin-top: 1.2rem;
+  }
+
+  .home-hero-actions {
+    margin-top: 1.2rem;
+  }
+
+  .home-hero-subrail {
+    margin-top: 1rem;
+    padding-top: 1rem;
+  }
+
   .home-final-cta-actions .btn,
   .home-hero-actions .btn {
     width: 100%;
@@ -3016,7 +3044,7 @@ body.property-page .property-review-card {
   border: 1px solid rgba(27, 22, 19, 0.08);
   box-shadow: 0 14px 34px rgba(18, 16, 13, 0.06);
   backdrop-filter: none;
-  border-radius: 14px;
+  border-radius: 4px;
 }
 
 body.property-page .property-review-card:hover {

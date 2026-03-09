@@ -188,8 +188,8 @@ $bookingValues = [
                     <figure class="home-hero-stage">
                         <img src="<?php echo $escape($homeHeroBackdrop); ?>" alt="Holland Homes signature collection hero">
                         <figcaption class="home-hero-stage-caption">
-                            <span>Signature horizon</span>
-                            <strong>The campaign image returns as the main arrival moment.</strong>
+                            <span>Holland Homes collection</span>
+                            <strong>Direct-book stays across Rockaway Beach and Palm Springs.</strong>
                         </figcaption>
                     </figure>
                     <div class="home-hero-rail">

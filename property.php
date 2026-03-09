@@ -110,10 +110,10 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
             --hh-green: #253d34;
             --hh-shadow: 0 24px 60px rgba(18, 16, 13, 0.10);
             --hh-shadow-soft: 0 14px 34px rgba(18, 16, 13, 0.06);
-            --hh-radius-xl: 18px;
-            --hh-radius-lg: 14px;
-            --hh-radius-md: 10px;
-            --hh-radius-sm: 6px;
+            --hh-radius-xl: 6px;
+            --hh-radius-lg: 4px;
+            --hh-radius-md: 3px;
+            --hh-radius-sm: 2px;
         }
 
         html {
@@ -285,7 +285,7 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
             gap: 10px;
             flex-wrap: wrap;
             padding: 9px 14px;
-            border-radius: 999px;
+            border-radius: var(--hh-radius-sm);
             background: rgba(255,255,255,0.12);
             border: 1px solid rgba(255,255,255,0.18);
             backdrop-filter: blur(10px);
@@ -324,7 +324,7 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
             align-items: center;
             gap: 8px;
             padding: 10px 13px;
-            border-radius: 999px;
+            border-radius: var(--hh-radius-sm);
             background: rgba(255,255,255,0.12);
             border: 1px solid rgba(255,255,255,0.16);
             backdrop-filter: blur(10px);
@@ -444,7 +444,8 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
             color: var(--hh-text);
             padding: 10px 14px;
             border-radius: var(--hh-radius-md);
-            background: rgba(27,22,19,0.03);
+            background: rgba(27,22,19,0.02);
+            border: 1px solid rgba(27,22,19,0.06);
             font-weight: 700;
             font-size: 0.78rem;
             letter-spacing: 0.14em;
@@ -704,7 +705,7 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
             background: rgba(12,12,12,0.56);
             border: 1px solid rgba(255,255,255,0.16);
             backdrop-filter: blur(8px);
-            border-radius: 999px;
+            border-radius: var(--hh-radius-sm);
             opacity: 0;
             transform: translateY(6px);
             transition: opacity 0.22s ease, transform 0.22s ease;
@@ -868,7 +869,7 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
         .calendar-header button {
             width: 40px;
             height: 40px;
-            border-radius: 999px;
+            border-radius: var(--hh-radius-sm);
             border: 1px solid rgba(23,21,18,0.08);
             background: #fff;
             cursor: pointer;
@@ -920,6 +921,10 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
         .superhost-badge {
             color: #FF385C;
             font-weight: 700;
+            padding: 4px 8px;
+            border: 1px solid rgba(255,56,92,0.16);
+            background: rgba(255,56,92,0.08);
+            border-radius: var(--hh-radius-sm);
         }
 
         .footer-shell {
@@ -1017,7 +1022,7 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
             right: -12px;
             width: 46px;
             height: 46px;
-            border-radius: 999px;
+            border-radius: var(--hh-radius-sm);
             font-size: 1.3rem;
             line-height: 1;
         }
@@ -1028,7 +1033,7 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
             transform: translateY(-50%);
             width: 50px;
             height: 50px;
-            border-radius: 999px;
+            border-radius: var(--hh-radius-sm);
             font-size: 1.35rem;
             line-height: 1;
         }
