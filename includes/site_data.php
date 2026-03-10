@@ -40,7 +40,11 @@ function hh_site_data() {
                     'pet_fee' => 100.0,
                     'pets_allowed' => true,
                     'state_tax_rate' => 1.5,
+                    'state_tax_label' => 'Oregon',
                     'city_tax_rate' => 10.0,
+                    'city_tax_label' => 'Rockaway Beach',
+                    'county_tax_rate' => 1.5,
+                    'county_tax_label' => 'Tillamook County',
                 ],
                 'badges' => ['Dog-friendly', 'Rockaway Beach', 'Oregon Coast', 'Quiet retreat'],
                 'detail_blocks' => [
@@ -99,7 +103,11 @@ function hh_site_data() {
                     'pet_fee' => 200.0,
                     'pets_allowed' => true,
                     'state_tax_rate' => 1.5,
+                    'state_tax_label' => 'Oregon',
                     'city_tax_rate' => 10.0,
+                    'city_tax_label' => 'Unincorporated Tillamook County',
+                    'county_tax_rate' => 0.0,
+                    'county_tax_label' => 'Tillamook County',
                 ],
                 'badges' => ['Cedar barrel sauna', 'Hot tub', 'Cold plunge', 'Rockaway Beach'],
                 'detail_blocks' => [
@@ -158,7 +166,11 @@ function hh_site_data() {
                     'pet_fee' => 0.0,
                     'pets_allowed' => false,
                     'state_tax_rate' => 0.0,
-                    'city_tax_rate' => 12.5,
+                    'state_tax_label' => 'California',
+                    'city_tax_rate' => 11.5,
+                    'city_tax_label' => 'Palm Springs TOT',
+                    'county_tax_rate' => 1.0,
+                    'county_tax_label' => 'Tourism Assessment/Fee',
                 ],
                 'badges' => ['Palm Springs', 'Modern villa', 'Architect-led identity', 'Iconic retreat'],
                 'detail_blocks' => [
@@ -292,13 +304,38 @@ function hh_listing_booking_settings(array $settings, $slug) {
     $slug = strtolower(trim((string) $slug));
     $listingBooking = $settings['listing_booking'] ?? [];
     $configured = $listingBooking[$slug] ?? [];
+    $siteData = hh_site_data();
+    $properties = is_array($siteData['properties'] ?? null) ? $siteData['properties'] : [];
+    $property = is_array($properties[$slug] ?? null) ? $properties[$slug] : [];
+    $feeDefaults = is_array($property['booking_fees'] ?? null) ? $property['booking_fees'] : [];
     $minNights = (int) ($configured['min_nights'] ?? hh_default_min_nights($slug));
     if ($minNights < 1) {
         $minNights = hh_default_min_nights($slug);
     }
 
+    $petsAllowedDefault = (bool) ($feeDefaults['pets_allowed'] ?? false);
+    $petsAllowedRaw = $configured['pets_allowed'] ?? $petsAllowedDefault;
+    $petsAllowed = $petsAllowedDefault;
+    if (is_bool($petsAllowedRaw)) {
+        $petsAllowed = $petsAllowedRaw;
+    } elseif (is_string($petsAllowedRaw)) {
+        $normalized = strtolower(trim($petsAllowedRaw));
+        $petsAllowed = in_array($normalized, ['1', 'true', 'yes', 'on'], true);
+    } elseif (is_int($petsAllowedRaw) || is_float($petsAllowedRaw)) {
+        $petsAllowed = ((float) $petsAllowedRaw) !== 0.0;
+    }
+
     return [
         'min_nights' => $minNights,
         'ical_url' => trim((string) ($configured['ical_url'] ?? '')),
+        'cleaning_fee' => max(0, (float) ($configured['cleaning_fee'] ?? ($feeDefaults['cleaning_fee'] ?? 0))),
+        'pet_fee' => max(0, (float) ($configured['pet_fee'] ?? ($feeDefaults['pet_fee'] ?? 0))),
+        'pets_allowed' => $petsAllowed,
+        'state_tax_rate' => max(0, (float) ($configured['state_tax_rate'] ?? ($feeDefaults['state_tax_rate'] ?? 0))),
+        'state_tax_label' => trim((string) ($feeDefaults['state_tax_label'] ?? 'State tax')),
+        'city_tax_rate' => max(0, (float) ($configured['city_tax_rate'] ?? ($feeDefaults['city_tax_rate'] ?? 0))),
+        'city_tax_label' => trim((string) ($feeDefaults['city_tax_label'] ?? 'City tax')),
+        'county_tax_rate' => max(0, (float) ($configured['county_tax_rate'] ?? ($feeDefaults['county_tax_rate'] ?? 0))),
+        'county_tax_label' => trim((string) ($feeDefaults['county_tax_label'] ?? 'County tax')),
     ];
 }

@@ -71,8 +71,23 @@ if ($isLoggedIn && (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') && isset($
     if ($action === 'save_listing_booking_settings') {
         $submittedMinNights = $_POST['min_nights'] ?? [];
         $submittedIcalUrls = $_POST['ical_url'] ?? [];
+        $submittedCleaningFees = $_POST['cleaning_fee'] ?? [];
+        $submittedPetFees = $_POST['pet_fee'] ?? [];
+        $submittedPetsAllowed = $_POST['pets_allowed'] ?? [];
+        $submittedStateTaxRates = $_POST['state_tax_rate'] ?? [];
+        $submittedCityTaxRates = $_POST['city_tax_rate'] ?? [];
+        $submittedCountyTaxRates = $_POST['county_tax_rate'] ?? [];
 
-        if (!is_array($submittedMinNights) || !is_array($submittedIcalUrls)) {
+        if (
+            !is_array($submittedMinNights) ||
+            !is_array($submittedIcalUrls) ||
+            !is_array($submittedCleaningFees) ||
+            !is_array($submittedPetFees) ||
+            !is_array($submittedPetsAllowed) ||
+            !is_array($submittedStateTaxRates) ||
+            !is_array($submittedCityTaxRates) ||
+            !is_array($submittedCountyTaxRates)
+        ) {
             $errorMessages[] = 'Invalid booking settings payload.';
         } else {
             if (!isset($settings['listing_booking']) || !is_array($settings['listing_booking'])) {
@@ -91,9 +106,22 @@ if ($isLoggedIn && (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') && isset($
                     $errorMessages[] = ucfirst($slug) . ': iCal URL is not a valid URL.';
                 }
 
+                $cleaningFee = max(0, (float) ($submittedCleaningFees[$slug] ?? 0));
+                $petFee = max(0, (float) ($submittedPetFees[$slug] ?? 0));
+                $petsAllowed = isset($submittedPetsAllowed[$slug]) && (string) $submittedPetsAllowed[$slug] === '1';
+                $stateTaxRate = max(0, (float) ($submittedStateTaxRates[$slug] ?? 0));
+                $cityTaxRate = max(0, (float) ($submittedCityTaxRates[$slug] ?? 0));
+                $countyTaxRate = max(0, (float) ($submittedCountyTaxRates[$slug] ?? 0));
+
                 $settings['listing_booking'][$slug] = [
                     'min_nights' => $minNights,
                     'ical_url' => $icalUrl,
+                    'cleaning_fee' => round($cleaningFee, 2),
+                    'pet_fee' => round($petFee, 2),
+                    'pets_allowed' => $petsAllowed,
+                    'state_tax_rate' => round($stateTaxRate, 3),
+                    'city_tax_rate' => round($cityTaxRate, 3),
+                    'county_tax_rate' => round($countyTaxRate, 3),
                 ];
             }
 
@@ -369,7 +397,7 @@ $conversionRate = $totalViews > 0 ? round(($bookingIntents / $totalViews) * 100,
             <ol class="dashboard-steps">
                 <li>Choose a property and upload one or more listing photos.</li>
                 <li>Pick which image should be the hero image (large top image on the property page).</li>
-                <li>Update minimum nights and optional calendar sync link in booking settings.</li>
+                <li>Update minimum nights, fees, taxes, and optional calendar sync links in booking settings.</li>
             </ol>
         </section>
 
@@ -452,7 +480,7 @@ $conversionRate = $totalViews > 0 ? round(($bookingIntents / $totalViews) * 100,
         <section class="dashboard-card" style="margin-top:1rem;">
             <div class="section-heading slim">
                 <span class="eyebrow eyebrow-dark">Booking rules</span>
-                <h2>Minimum nights and calendar sync</h2>
+                <h2>Booking fees, taxes, and calendar sync</h2>
             </div>
             <form method="POST" class="dashboard-inline-form">
                 <input type="hidden" name="action" value="refresh_ical_sync">
@@ -469,7 +497,7 @@ $conversionRate = $totalViews > 0 ? round(($bookingIntents / $totalViews) * 100,
             <form method="POST" class="admin-form">
                     <input type="hidden" name="action" value="save_listing_booking_settings">
                     <h3>Booking sync settings</h3>
-                    <p class="form-note">Set minimum nights and add an Airbnb iCal URL for each property if you want booked dates to auto-sync.</p>
+                    <p class="form-note">Set minimum nights, cleaning/pet fees, tax rates, and Airbnb iCal URLs for each property.</p>
                     <?php foreach ($properties as $slug => $property): ?>
                         <?php $bookingSettings = $bookingSettingsByProperty[$slug] ?? hh_listing_booking_settings($settings, $slug); ?>
                         <div class="booking-settings-row">
@@ -490,6 +518,55 @@ $conversionRate = $totalViews > 0 ? round(($bookingIntents / $totalViews) * 100,
                                 placeholder="https://www.airbnb.com/calendar/ical/...ics"
                                 class="dashboard-select"
                             >
+                            <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                name="cleaning_fee[<?php echo $escape($slug); ?>]"
+                                value="<?php echo $escape(number_format((float) ($bookingSettings['cleaning_fee'] ?? 0), 2, '.', '')); ?>"
+                                placeholder="Cleaning fee (USD)"
+                                class="dashboard-select"
+                            >
+                            <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                name="pet_fee[<?php echo $escape($slug); ?>]"
+                                value="<?php echo $escape(number_format((float) ($bookingSettings['pet_fee'] ?? 0), 2, '.', '')); ?>"
+                                placeholder="Pet fee (USD)"
+                                class="dashboard-select"
+                            >
+                            <input
+                                type="number"
+                                min="0"
+                                step="0.001"
+                                name="state_tax_rate[<?php echo $escape($slug); ?>]"
+                                value="<?php echo $escape(number_format((float) ($bookingSettings['state_tax_rate'] ?? 0), 3, '.', '')); ?>"
+                                placeholder="State tax rate (%)"
+                                class="dashboard-select"
+                            >
+                            <input
+                                type="number"
+                                min="0"
+                                step="0.001"
+                                name="city_tax_rate[<?php echo $escape($slug); ?>]"
+                                value="<?php echo $escape(number_format((float) ($bookingSettings['city_tax_rate'] ?? 0), 3, '.', '')); ?>"
+                                placeholder="City tax rate (%)"
+                                class="dashboard-select"
+                            >
+                            <input
+                                type="number"
+                                min="0"
+                                step="0.001"
+                                name="county_tax_rate[<?php echo $escape($slug); ?>]"
+                                value="<?php echo $escape(number_format((float) ($bookingSettings['county_tax_rate'] ?? 0), 3, '.', '')); ?>"
+                                placeholder="County / tourism tax rate (%)"
+                                class="dashboard-select"
+                            >
+                            <label class="admin-checkbox-row">
+                                <input type="checkbox" name="pets_allowed[<?php echo $escape($slug); ?>]" value="1" <?php echo !empty($bookingSettings['pets_allowed']) ? 'checked' : ''; ?>>
+                                <span>Pets allowed for <?php echo $escape($property['name']); ?></span>
+                            </label>
                         </div>
                     <?php endforeach; ?>
                     <button type="submit" class="btn">Save Booking Settings</button>

@@ -159,7 +159,7 @@ $phone = trim((string) ($_GET['phone'] ?? ''));
                             <h2>Apply booking extras</h2>
                         </div>
                         <div class="checkout-note-stack">
-                            <p>Cleaning fees, optional pet fees, plus city and state taxes are included in your booking estimate.</p>
+                            <p>Cleaning fees, optional pet fees, plus state, city, and county/tourism taxes are included in your booking estimate.</p>
                         </div>
                         <?php if (!empty($quote['pets_allowed'])): ?>
                             <label class="form-check">
@@ -248,12 +248,16 @@ $phone = trim((string) ($_GET['phone'] ?? ''));
                             <strong id="pet-fee-amount"><?php echo $escape(hh_money_format($quote['pet_fee_applied'], $currency)); ?></strong>
                         </div>
                         <div class="quote-row">
-                            <span>State tax (<?php echo $escape(number_format((float) $quote['state_tax_rate'], 2)); ?>%)</span>
+                            <span><?php echo $escape((string) ($quote['state_tax_label'] ?? 'State tax')); ?> tax (<?php echo $escape(number_format((float) $quote['state_tax_rate'], 2)); ?>%)</span>
                             <strong id="state-tax-amount"><?php echo $escape(hh_money_format($quote['state_tax_amount'], $currency)); ?></strong>
                         </div>
                         <div class="quote-row">
-                            <span>City tax (<?php echo $escape(number_format((float) $quote['city_tax_rate'], 2)); ?>%)</span>
+                            <span><?php echo $escape((string) ($quote['city_tax_label'] ?? 'City')); ?> tax (<?php echo $escape(number_format((float) $quote['city_tax_rate'], 2)); ?>%)</span>
                             <strong id="city-tax-amount"><?php echo $escape(hh_money_format($quote['city_tax_amount'], $currency)); ?></strong>
+                        </div>
+                        <div class="quote-row">
+                            <span><?php echo $escape((string) ($quote['county_tax_label'] ?? 'County')); ?> tax (<?php echo $escape(number_format((float) $quote['county_tax_rate'], 2)); ?>%)</span>
+                            <strong id="county-tax-amount"><?php echo $escape(hh_money_format($quote['county_tax_amount'], $currency)); ?></strong>
                         </div>
                         <div class="quote-row">
                             <span>Estimated booking total</span>
@@ -308,6 +312,7 @@ $phone = trim((string) ($_GET['phone'] ?? ''));
             const petFeeAmount = document.getElementById('pet-fee-amount');
             const stateTaxAmount = document.getElementById('state-tax-amount');
             const cityTaxAmount = document.getElementById('city-tax-amount');
+            const countyTaxAmount = document.getElementById('county-tax-amount');
             const estimatedTotalAmount = document.getElementById('estimated-total-amount');
             const remainingBalanceAmount = document.getElementById('remaining-balance-amount');
             const includePetInput = document.querySelector('input[name="include_pet"]');
@@ -316,6 +321,7 @@ $phone = trim((string) ($_GET['phone'] ?? ''));
             const petFee = <?php echo json_encode((float) $quote['pet_fee']); ?>;
             const stateTaxRate = <?php echo json_encode((float) $quote['state_tax_rate']); ?>;
             const cityTaxRate = <?php echo json_encode((float) $quote['city_tax_rate']); ?>;
+            const countyTaxRate = <?php echo json_encode((float) $quote['county_tax_rate']); ?>;
             const depositPercent = <?php echo json_encode((int) $depositPercent); ?>;
             const currencySymbol = <?php echo json_encode(hh_currency_symbol($currency)); ?>;
 
@@ -327,10 +333,11 @@ $phone = trim((string) ($_GET['phone'] ?? ''));
                 const taxableSubtotal = roundMoney(nightlySubtotal + cleaningFee + petApplied);
                 const stateTax = roundMoney(taxableSubtotal * (stateTaxRate / 100));
                 const cityTax = roundMoney(taxableSubtotal * (cityTaxRate / 100));
-                const estimatedTotal = roundMoney(taxableSubtotal + stateTax + cityTax);
+                const countyTax = roundMoney(taxableSubtotal * (countyTaxRate / 100));
+                const estimatedTotal = roundMoney(taxableSubtotal + stateTax + cityTax + countyTax);
                 const deposit = roundMoney(estimatedTotal * (depositPercent / 100));
                 const remainingBalance = roundMoney(estimatedTotal - deposit);
-                return { petApplied, stateTax, cityTax, estimatedTotal, deposit, remainingBalance };
+                return { petApplied, stateTax, cityTax, countyTax, estimatedTotal, deposit, remainingBalance };
             };
 
             const updateSelection = () => {
@@ -355,6 +362,9 @@ $phone = trim((string) ($_GET['phone'] ?? ''));
                 }
                 if (cityTaxAmount) {
                     cityTaxAmount.textContent = formatMoney(totals.cityTax);
+                }
+                if (countyTaxAmount) {
+                    countyTaxAmount.textContent = formatMoney(totals.countyTax);
                 }
                 if (estimatedTotalAmount) {
                     estimatedTotalAmount.textContent = formatMoney(totals.estimatedTotal);

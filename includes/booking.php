@@ -247,17 +247,19 @@ function hh_load_pricelabs_calendar_data($slug, PriceLabsAPI $priceLabs, $startD
 }
 
 function hh_property_fee_profile($slug) {
-    $siteData = hh_site_data();
-    $properties = is_array($siteData['properties'] ?? null) ? $siteData['properties'] : [];
-    $property = $properties[$slug] ?? [];
-    $fees = is_array($property['booking_fees'] ?? null) ? $property['booking_fees'] : [];
+    $settings = hh_load_site_settings();
+    $bookingSettings = hh_listing_booking_settings($settings, $slug);
 
     return [
-        'cleaning_fee' => max(0, (float) ($fees['cleaning_fee'] ?? 0)),
-        'pet_fee' => max(0, (float) ($fees['pet_fee'] ?? 0)),
-        'pets_allowed' => hh_boolean_like($fees['pets_allowed'] ?? false, false),
-        'state_tax_rate' => max(0, (float) ($fees['state_tax_rate'] ?? 0)),
-        'city_tax_rate' => max(0, (float) ($fees['city_tax_rate'] ?? 0)),
+        'cleaning_fee' => max(0, (float) ($bookingSettings['cleaning_fee'] ?? 0)),
+        'pet_fee' => max(0, (float) ($bookingSettings['pet_fee'] ?? 0)),
+        'pets_allowed' => hh_boolean_like($bookingSettings['pets_allowed'] ?? false, false),
+        'state_tax_rate' => max(0, (float) ($bookingSettings['state_tax_rate'] ?? 0)),
+        'state_tax_label' => trim((string) ($bookingSettings['state_tax_label'] ?? 'State tax')),
+        'city_tax_rate' => max(0, (float) ($bookingSettings['city_tax_rate'] ?? 0)),
+        'city_tax_label' => trim((string) ($bookingSettings['city_tax_label'] ?? 'City tax')),
+        'county_tax_rate' => max(0, (float) ($bookingSettings['county_tax_rate'] ?? 0)),
+        'county_tax_label' => trim((string) ($bookingSettings['county_tax_label'] ?? 'County tax')),
     ];
 }
 
@@ -295,11 +297,16 @@ function hh_build_booking_quote($slug, DateTimeImmutable $checkin, DateTimeImmut
     $includePet = $petsAllowed ? hh_boolean_like($includePet, false) : false;
     $petFeeApplied = $includePet ? $petFee : 0.0;
     $stateTaxRate = (float) $feeProfile['state_tax_rate'];
+    $stateTaxLabel = (string) $feeProfile['state_tax_label'];
     $cityTaxRate = (float) $feeProfile['city_tax_rate'];
+    $cityTaxLabel = (string) $feeProfile['city_tax_label'];
+    $countyTaxRate = (float) $feeProfile['county_tax_rate'];
+    $countyTaxLabel = (string) $feeProfile['county_tax_label'];
     $taxableSubtotal = round($nightlySubtotal + $cleaningFee + $petFeeApplied, 2);
     $stateTaxAmount = round($taxableSubtotal * ($stateTaxRate / 100), 2);
     $cityTaxAmount = round($taxableSubtotal * ($cityTaxRate / 100), 2);
-    $estimatedTotal = round($taxableSubtotal + $stateTaxAmount + $cityTaxAmount, 2);
+    $countyTaxAmount = round($taxableSubtotal * ($countyTaxRate / 100), 2);
+    $estimatedTotal = round($taxableSubtotal + $stateTaxAmount + $cityTaxAmount + $countyTaxAmount, 2);
 
     $depositPercent = max(1, (int) ($checkoutDefaults['deposit_percent'] ?? 30));
     $securityDeposit = max(0, (float) ($checkoutDefaults['security_deposit'] ?? 0));
@@ -337,9 +344,14 @@ function hh_build_booking_quote($slug, DateTimeImmutable $checkin, DateTimeImmut
         'pets_allowed' => $petsAllowed,
         'include_pet' => $includePet,
         'state_tax_rate' => $stateTaxRate,
+        'state_tax_label' => $stateTaxLabel,
         'city_tax_rate' => $cityTaxRate,
+        'city_tax_label' => $cityTaxLabel,
+        'county_tax_rate' => $countyTaxRate,
+        'county_tax_label' => $countyTaxLabel,
         'state_tax_amount' => $stateTaxAmount,
         'city_tax_amount' => $cityTaxAmount,
+        'county_tax_amount' => $countyTaxAmount,
         'taxable_subtotal' => $taxableSubtotal,
         'estimated_total' => $estimatedTotal,
         'deposit_due' => $depositDue,
