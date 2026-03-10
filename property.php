@@ -68,6 +68,9 @@ $locationText = $airbnbData['location'] ?: 'Featured destination';
 $ratingText = $airbnbData['rating'] ?: 'New';
 $reviewsCount = (string) ($airbnbData['reviews_count'] ?? '0');
 $listingType = $airbnbData['listing_type'] ?: 'Vacation rental';
+if ($id === 'home') {
+    $listingType = 'Oasis';
+}
 $description = trim((string) ($airbnbData['description'] ?? $property['summary']));
 $summary = trim((string) ($property['summary'] ?? $property['name']));
 $bedroomsText = hh_airbnb_fact($airbnbData['bedrooms'], 'bedroom');
@@ -1202,7 +1205,7 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
 
                 <div class="hero-actions">
                     <a href="#book" class="btn">Reserve Your Stay</a>
-                    <a href="#gallery" class="btn btn-secondary">Explore the Home</a>
+                    <a href="#gallery" class="btn btn-secondary">Explore the Gallery</a>
                 </div>
             </div>
 

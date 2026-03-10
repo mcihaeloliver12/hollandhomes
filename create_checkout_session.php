@@ -36,6 +36,7 @@ if (!$validation['valid']) {
 }
 
 $protection = strtolower(trim((string) ($_POST['protection'] ?? 'waivo')));
+$includePet = hh_boolean_like($_POST['include_pet'] ?? '0', false);
 $firstName = trim((string) ($_POST['first_name'] ?? ''));
 $lastName = trim((string) ($_POST['last_name'] ?? ''));
 $email = trim((string) ($_POST['email'] ?? ''));
@@ -48,6 +49,7 @@ $checkoutParams = [
     'checkin' => (string) ($_POST['checkin'] ?? ''),
     'checkout' => (string) ($_POST['checkout'] ?? ''),
     'protection' => $protection,
+    'include_pet' => $includePet ? '1' : '0',
     'first_name' => $firstName,
     'last_name' => $lastName,
     'email' => $email,
@@ -78,7 +80,7 @@ if (!$contactAck || !$termsAck) {
 $checkoutDefaults = hh_checkout_defaults();
 
 try {
-    $quote = hh_build_booking_quote($id, $validation['checkin'], $validation['checkout'], $checkoutDefaults, $priceLabs);
+    $quote = hh_build_booking_quote($id, $validation['checkin'], $validation['checkout'], $checkoutDefaults, $priceLabs, $includePet);
 } catch (RuntimeException $exception) {
     header('Location: ' . hh_booking_error_redirect_url($id, $exception->getMessage()));
     exit;
@@ -102,6 +104,7 @@ $successUrl = $baseUrl . '/checkout.php?' . http_build_query([
     'checkin' => hh_date_iso($validation['checkin']),
     'checkout' => hh_date_iso($validation['checkout']),
     'protection' => $protection,
+    'include_pet' => $includePet ? '1' : '0',
     'status' => 'success',
     'session_id' => '{CHECKOUT_SESSION_ID}',
 ]);
@@ -110,6 +113,7 @@ $cancelUrl = $baseUrl . '/checkout.php?' . http_build_query([
     'checkin' => hh_date_iso($validation['checkin']),
     'checkout' => hh_date_iso($validation['checkout']),
     'protection' => $protection,
+    'include_pet' => $includePet ? '1' : '0',
     'status' => 'cancelled',
     'first_name' => $firstName,
     'last_name' => $lastName,
@@ -135,6 +139,14 @@ $fields = [
         'guest_name' => trim($firstName . ' ' . $lastName),
         'guest_phone' => $phone,
         'protection' => $protectionOption['label'],
+        'include_pet' => !empty($quote['include_pet']) ? 'yes' : 'no',
+        'cleaning_fee' => number_format((float) $quote['cleaning_fee'], 2, '.', ''),
+        'pet_fee' => number_format((float) $quote['pet_fee_applied'], 2, '.', ''),
+        'state_tax_rate' => number_format((float) $quote['state_tax_rate'], 2, '.', ''),
+        'state_tax_amount' => number_format((float) $quote['state_tax_amount'], 2, '.', ''),
+        'city_tax_rate' => number_format((float) $quote['city_tax_rate'], 2, '.', ''),
+        'city_tax_amount' => number_format((float) $quote['city_tax_amount'], 2, '.', ''),
+        'estimated_total' => number_format((float) $quote['estimated_total'], 2, '.', ''),
         'deposit_due' => number_format((float) $quote['deposit_due'], 2, '.', ''),
         'remaining_balance' => number_format((float) $quote['remaining_balance'], 2, '.', ''),
     ],
@@ -144,7 +156,7 @@ $fields = [
                 'currency' => $currency,
                 'product_data' => [
                     'name' => (string) ($property['name'] ?? 'Holland Homes') . ' reservation deposit',
-                    'description' => 'Deposit for ' . $quote['nights'] . '-night stay from ' . hh_date_iso($validation['checkin']) . ' to ' . hh_date_iso($validation['checkout']),
+                    'description' => 'Deposit for ' . $quote['nights'] . '-night stay from ' . hh_date_iso($validation['checkin']) . ' to ' . hh_date_iso($validation['checkout']) . ', including fees and taxes in the estimate.',
                 ],
                 'unit_amount' => hh_money_cents($quote['deposit_due']),
             ],

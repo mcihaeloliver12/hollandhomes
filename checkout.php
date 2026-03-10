@@ -32,9 +32,10 @@ if (!$validation['valid']) {
 }
 
 $checkoutDefaults = hh_checkout_defaults();
+$includePet = hh_boolean_like($_GET['include_pet'] ?? '0', false);
 
 try {
-    $quote = hh_build_booking_quote($id, $validation['checkin'], $validation['checkout'], $checkoutDefaults, $priceLabs);
+    $quote = hh_build_booking_quote($id, $validation['checkin'], $validation['checkout'], $checkoutDefaults, $priceLabs, $includePet);
 } catch (RuntimeException $exception) {
     header('Location: ' . hh_booking_error_redirect_url($id, $exception->getMessage()));
     exit;
@@ -85,7 +86,7 @@ $phone = trim((string) ($_GET['phone'] ?? ''));
             <section class="checkout-main">
                 <span class="eyebrow eyebrow-dark">Direct Booking Checkout</span>
                 <h1>Review your stay at <?php echo $escape($property['name']); ?></h1>
-                <p class="checkout-intro">Your dates already cleared the minimum-stay and availability rules. Continue to Stripe when the guest details and protection option look right.</p>
+                <p class="checkout-intro">Your dates already cleared the minimum-stay and availability rules. Continue to Stripe when the guest details, fees, taxes, and protection option look right.</p>
 
                 <?php if ($status === 'success'): ?>
                     <div class="booking-banner booking-banner-success">Your Stripe checkout returned successfully. Holland Homes will send booking confirmation details, including the direct phone number, after review.</div>
@@ -154,14 +155,32 @@ $phone = trim((string) ($_GET['phone'] ?? ''));
 
                     <div class="checkout-card">
                         <div class="section-heading slim">
+                            <span class="eyebrow eyebrow-dark">Fees and taxes</span>
+                            <h2>Apply booking extras</h2>
+                        </div>
+                        <div class="checkout-note-stack">
+                            <p>Cleaning fees, optional pet fees, plus city and state taxes are included in your booking estimate.</p>
+                        </div>
+                        <?php if (!empty($quote['pets_allowed'])): ?>
+                            <label class="form-check">
+                                <input type="checkbox" name="include_pet" value="1" <?php echo !empty($quote['include_pet']) ? 'checked' : ''; ?>>
+                                <span>Add pet fee (one-time): <?php echo $escape(hh_money_format($quote['pet_fee'], $currency)); ?></span>
+                            </label>
+                        <?php else: ?>
+                            <p class="form-note">Pets are not allowed at this property.</p>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="checkout-card">
+                        <div class="section-heading slim">
                             <span class="eyebrow eyebrow-dark">Today's payment</span>
                             <h2>Deposit now, balance later</h2>
                         </div>
                         <div class="quote-row">
                             <span>Reservation deposit due today</span>
-                            <strong><?php echo $escape(hh_money_format($quote['deposit_due'], $currency)); ?></strong>
+                            <strong id="deposit-due-amount"><?php echo $escape(hh_money_format($quote['deposit_due'], $currency)); ?></strong>
                         </div>
-                        <p class="form-note"><?php echo $escape((string) $depositPercent); ?>% of the current lodging estimate is collected in Stripe today. The remaining balance can be invoiced separately <?php echo $escape((string) $balanceDueDays); ?> days before arrival.</p>
+                        <p class="form-note"><?php echo $escape((string) $depositPercent); ?>% of the current booking estimate (lodging, cleaning, pet fee if selected, and taxes) is collected in Stripe today. The remaining balance can be invoiced separately <?php echo $escape((string) $balanceDueDays); ?> days before arrival.</p>
                     </div>
 
                     <div class="checkout-card">
@@ -197,7 +216,7 @@ $phone = trim((string) ($_GET['phone'] ?? ''));
                         </label>
                         <label class="form-check">
                             <input type="checkbox" name="terms_ack" value="1" required>
-                            <span>I understand today's charge is a reservation deposit plus the selected protection option.</span>
+                            <span>I understand today's charge is a reservation deposit on the booking estimate plus the selected protection option.</span>
                         </label>
                     </div>
 
@@ -221,6 +240,26 @@ $phone = trim((string) ($_GET['phone'] ?? ''));
                             <strong><?php echo $escape(hh_money_format($quote['nightly_subtotal'], $currency)); ?></strong>
                         </div>
                         <div class="quote-row">
+                            <span>Cleaning fee</span>
+                            <strong><?php echo $escape(hh_money_format($quote['cleaning_fee'], $currency)); ?></strong>
+                        </div>
+                        <div class="quote-row">
+                            <span>Pet fee</span>
+                            <strong id="pet-fee-amount"><?php echo $escape(hh_money_format($quote['pet_fee_applied'], $currency)); ?></strong>
+                        </div>
+                        <div class="quote-row">
+                            <span>State tax (<?php echo $escape(number_format((float) $quote['state_tax_rate'], 2)); ?>%)</span>
+                            <strong id="state-tax-amount"><?php echo $escape(hh_money_format($quote['state_tax_amount'], $currency)); ?></strong>
+                        </div>
+                        <div class="quote-row">
+                            <span>City tax (<?php echo $escape(number_format((float) $quote['city_tax_rate'], 2)); ?>%)</span>
+                            <strong id="city-tax-amount"><?php echo $escape(hh_money_format($quote['city_tax_amount'], $currency)); ?></strong>
+                        </div>
+                        <div class="quote-row">
+                            <span>Estimated booking total</span>
+                            <strong id="estimated-total-amount"><?php echo $escape(hh_money_format($quote['estimated_total'], $currency)); ?></strong>
+                        </div>
+                        <div class="quote-row">
                             <span>Protection option</span>
                             <strong id="selected-protection-label"><?php echo $escape($selectedOption['label']); ?></strong>
                         </div>
@@ -230,7 +269,7 @@ $phone = trim((string) ($_GET['phone'] ?? ''));
                         </div>
                         <div class="quote-row subdued-row">
                             <span>Estimated remaining balance</span>
-                            <strong><?php echo $escape(hh_money_format($quote['remaining_balance'], $currency)); ?></strong>
+                            <strong id="remaining-balance-amount"><?php echo $escape(hh_money_format($quote['remaining_balance'], $currency)); ?></strong>
                         </div>
                         <p class="form-note">Nightly pricing source: <?php echo $escape($quote['pricing_source'] === 'live' ? 'PriceLabs live pricing' : 'fallback nightly estimate'); ?>.</p>
                     </div>
@@ -265,10 +304,34 @@ $phone = trim((string) ($_GET['phone'] ?? ''));
             const protectionOptions = document.querySelectorAll('[data-protection-option]');
             const dueTodayAmount = document.getElementById('due-today-amount');
             const protectionLabel = document.getElementById('selected-protection-label');
-            const depositAmount = <?php echo json_encode((float) $quote['deposit_due']); ?>;
+            const depositDueAmount = document.getElementById('deposit-due-amount');
+            const petFeeAmount = document.getElementById('pet-fee-amount');
+            const stateTaxAmount = document.getElementById('state-tax-amount');
+            const cityTaxAmount = document.getElementById('city-tax-amount');
+            const estimatedTotalAmount = document.getElementById('estimated-total-amount');
+            const remainingBalanceAmount = document.getElementById('remaining-balance-amount');
+            const includePetInput = document.querySelector('input[name="include_pet"]');
+            const nightlySubtotal = <?php echo json_encode((float) $quote['nightly_subtotal']); ?>;
+            const cleaningFee = <?php echo json_encode((float) $quote['cleaning_fee']); ?>;
+            const petFee = <?php echo json_encode((float) $quote['pet_fee']); ?>;
+            const stateTaxRate = <?php echo json_encode((float) $quote['state_tax_rate']); ?>;
+            const cityTaxRate = <?php echo json_encode((float) $quote['city_tax_rate']); ?>;
+            const depositPercent = <?php echo json_encode((int) $depositPercent); ?>;
             const currencySymbol = <?php echo json_encode(hh_currency_symbol($currency)); ?>;
 
             const formatMoney = (amount) => `${currencySymbol}${Number(amount).toFixed(2)}`;
+            const roundMoney = (amount) => Math.round(Number(amount) * 100) / 100;
+
+            const computeTotals = () => {
+                const petApplied = includePetInput?.checked ? petFee : 0;
+                const taxableSubtotal = roundMoney(nightlySubtotal + cleaningFee + petApplied);
+                const stateTax = roundMoney(taxableSubtotal * (stateTaxRate / 100));
+                const cityTax = roundMoney(taxableSubtotal * (cityTaxRate / 100));
+                const estimatedTotal = roundMoney(taxableSubtotal + stateTax + cityTax);
+                const deposit = roundMoney(estimatedTotal * (depositPercent / 100));
+                const remainingBalance = roundMoney(estimatedTotal - deposit);
+                return { petApplied, stateTax, cityTax, estimatedTotal, deposit, remainingBalance };
+            };
 
             const updateSelection = () => {
                 const checked = document.querySelector('input[name="protection"]:checked');
@@ -279,9 +342,28 @@ $phone = trim((string) ($_GET['phone'] ?? ''));
                 const selectedCard = checked.closest('[data-protection-option]');
                 const selectedAmount = Number(selectedCard?.dataset.optionAmount || 0);
                 const selectedLabel = selectedCard?.querySelector('strong')?.textContent || '';
+                const totals = computeTotals();
                 protectionOptions.forEach((option) => option.classList.toggle('selected', option === selectedCard));
+                if (depositDueAmount) {
+                    depositDueAmount.textContent = formatMoney(totals.deposit);
+                }
+                if (petFeeAmount) {
+                    petFeeAmount.textContent = formatMoney(totals.petApplied);
+                }
+                if (stateTaxAmount) {
+                    stateTaxAmount.textContent = formatMoney(totals.stateTax);
+                }
+                if (cityTaxAmount) {
+                    cityTaxAmount.textContent = formatMoney(totals.cityTax);
+                }
+                if (estimatedTotalAmount) {
+                    estimatedTotalAmount.textContent = formatMoney(totals.estimatedTotal);
+                }
+                if (remainingBalanceAmount) {
+                    remainingBalanceAmount.textContent = formatMoney(totals.remainingBalance);
+                }
                 if (dueTodayAmount) {
-                    dueTodayAmount.textContent = formatMoney(depositAmount + selectedAmount);
+                    dueTodayAmount.textContent = formatMoney(totals.deposit + selectedAmount);
                 }
                 if (protectionLabel) {
                     protectionLabel.textContent = selectedLabel;
@@ -297,6 +379,10 @@ $phone = trim((string) ($_GET['phone'] ?? ''));
                     updateSelection();
                 });
             });
+
+            if (includePetInput) {
+                includePetInput.addEventListener('change', updateSelection);
+            }
 
             updateSelection();
         });

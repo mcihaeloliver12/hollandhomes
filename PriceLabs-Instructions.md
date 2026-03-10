@@ -8,7 +8,7 @@ After investigating, the PriceLabs API integration is **working correctly**:
 - **Data Source:** `live` (not fallback)
 - **All 3 properties found in cache:**
   - **The Chalet** → ID `608635403291162192` ✓
-  - **The Home** → ID `49479938` ✓
+- **The Oasis** → ID `49479938` ✓
   - **The Villa** → ID `1278298080134872974` ✓
 - **Last refresh:** March 6–7, 2026
 - **Cache TTL:** 1 hour (3600 seconds) — after 1 hour, fresh data is fetched from PriceLabs

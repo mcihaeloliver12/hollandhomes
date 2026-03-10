@@ -35,6 +35,13 @@ function hh_site_data() {
                     'lng' => -123.93659,
                 ],
                 'summary' => 'A cozy, dog-friendly Oregon Coast chalet surrounded by peace and natural beauty, perfect for couples and small groups.',
+                'booking_fees' => [
+                    'cleaning_fee' => 200.0,
+                    'pet_fee' => 100.0,
+                    'pets_allowed' => true,
+                    'state_tax_rate' => 1.5,
+                    'city_tax_rate' => 10.0,
+                ],
                 'badges' => ['Dog-friendly', 'Rockaway Beach', 'Oregon Coast', 'Quiet retreat'],
                 'detail_blocks' => [
                     [
@@ -65,7 +72,7 @@ function hh_site_data() {
             ],
             'home' => [
                 'slug' => 'home',
-                'name' => 'The Home',
+                'name' => 'The Oasis',
                 'is_superhost' => true,
                 'guest_review' => 'This place is incredible, the sauna, hot tub, and cold plunge made our group trip unforgettable. Plenty of space for everyone and the host thought of everything.',
                 'guest_review_name' => 'James',
@@ -73,9 +80,9 @@ function hh_site_data() {
                 'card_image' => 'Home/Photos/99758d42-2e67-440c-bf0f-b71d0c89b21e.jpeg',
                 'airbnb_url' => 'https://www.airbnb.com/rooms/49479938',
                 'fallback_airbnb' => [
-                    'title' => 'Home in Rockaway Beach · ★4.99 · 6 bedrooms · 8 beds · 3 baths',
+                    'title' => 'Oasis in Rockaway Beach · ★4.99 · 6 bedrooms · 8 beds · 3 baths',
                     'description' => 'Welcome to your private oasis in Rockaway Beach, Oregon. This exclusive retreat features a cedar barrel sauna, hot tub, and cold plunge for a more elevated coastal stay.',
-                    'listing_type' => 'Home',
+                    'listing_type' => 'Oasis',
                     'location' => 'Rockaway Beach',
                     'listing_label' => 'Entire home',
                     'rating' => '4.99',
@@ -87,6 +94,13 @@ function hh_site_data() {
                     'lng' => -123.95132,
                 ],
                 'summary' => 'A spacious Rockaway Beach retreat featuring a cedar barrel sauna, hot tub, cold plunge, and room for the whole group.',
+                'booking_fees' => [
+                    'cleaning_fee' => 425.0,
+                    'pet_fee' => 200.0,
+                    'pets_allowed' => true,
+                    'state_tax_rate' => 1.5,
+                    'city_tax_rate' => 10.0,
+                ],
                 'badges' => ['Cedar barrel sauna', 'Hot tub', 'Cold plunge', 'Rockaway Beach'],
                 'detail_blocks' => [
                     [
@@ -95,7 +109,7 @@ function hh_site_data() {
                     ],
                     [
                         'title' => 'Room for everyone',
-                        'text' => 'With six bedrooms, eight beds, and three bathrooms, The Home comfortably hosts large groups, family reunions, and friend getaways.',
+                        'text' => 'With six bedrooms, eight beds, and three bathrooms, The Oasis comfortably hosts large groups, family reunions, and friend getaways.',
                     ],
                     [
                         'title' => 'Your private oasis',
@@ -139,6 +153,13 @@ function hh_site_data() {
                     'lng' => -116.53819253037676,
                 ],
                 'summary' => 'A stunning, architect-designed Palm Springs villa, an iconic modern retreat in the heart of the desert.',
+                'booking_fees' => [
+                    'cleaning_fee' => 325.0,
+                    'pet_fee' => 0.0,
+                    'pets_allowed' => false,
+                    'state_tax_rate' => 0.0,
+                    'city_tax_rate' => 12.5,
+                ],
                 'badges' => ['Palm Springs', 'Modern villa', 'Architect-led identity', 'Iconic retreat'],
                 'detail_blocks' => [
                     [

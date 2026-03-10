@@ -246,7 +246,22 @@ function hh_load_pricelabs_calendar_data($slug, PriceLabsAPI $priceLabs, $startD
     return hh_extract_pricelabs_nightly_map($pricingResponse);
 }
 
-function hh_build_booking_quote($slug, DateTimeImmutable $checkin, DateTimeImmutable $checkout, array $checkoutDefaults, PriceLabsAPI $priceLabs) {
+function hh_property_fee_profile($slug) {
+    $siteData = hh_site_data();
+    $properties = is_array($siteData['properties'] ?? null) ? $siteData['properties'] : [];
+    $property = $properties[$slug] ?? [];
+    $fees = is_array($property['booking_fees'] ?? null) ? $property['booking_fees'] : [];
+
+    return [
+        'cleaning_fee' => max(0, (float) ($fees['cleaning_fee'] ?? 0)),
+        'pet_fee' => max(0, (float) ($fees['pet_fee'] ?? 0)),
+        'pets_allowed' => hh_boolean_like($fees['pets_allowed'] ?? false, false),
+        'state_tax_rate' => max(0, (float) ($fees['state_tax_rate'] ?? 0)),
+        'city_tax_rate' => max(0, (float) ($fees['city_tax_rate'] ?? 0)),
+    ];
+}
+
+function hh_build_booking_quote($slug, DateTimeImmutable $checkin, DateTimeImmutable $checkout, array $checkoutDefaults, PriceLabsAPI $priceLabs, $includePet = false) {
     $nightlyMap = hh_load_pricelabs_calendar_data($slug, $priceLabs, hh_date_iso($checkin), hh_date_iso($checkout));
     $nightlyRates = [];
     $nightlySubtotal = 0.0;
@@ -273,10 +288,23 @@ function hh_build_booking_quote($slug, DateTimeImmutable $checkin, DateTimeImmut
         $nightlySubtotal += $price;
     }
 
+    $feeProfile = hh_property_fee_profile($slug);
+    $cleaningFee = (float) $feeProfile['cleaning_fee'];
+    $petFee = (float) $feeProfile['pet_fee'];
+    $petsAllowed = (bool) $feeProfile['pets_allowed'];
+    $includePet = $petsAllowed ? hh_boolean_like($includePet, false) : false;
+    $petFeeApplied = $includePet ? $petFee : 0.0;
+    $stateTaxRate = (float) $feeProfile['state_tax_rate'];
+    $cityTaxRate = (float) $feeProfile['city_tax_rate'];
+    $taxableSubtotal = round($nightlySubtotal + $cleaningFee + $petFeeApplied, 2);
+    $stateTaxAmount = round($taxableSubtotal * ($stateTaxRate / 100), 2);
+    $cityTaxAmount = round($taxableSubtotal * ($cityTaxRate / 100), 2);
+    $estimatedTotal = round($taxableSubtotal + $stateTaxAmount + $cityTaxAmount, 2);
+
     $depositPercent = max(1, (int) ($checkoutDefaults['deposit_percent'] ?? 30));
     $securityDeposit = max(0, (float) ($checkoutDefaults['security_deposit'] ?? 0));
     $waivoFee = max(0, (float) ($checkoutDefaults['waivo_fee'] ?? 0));
-    $depositDue = round($nightlySubtotal * ($depositPercent / 100), 2);
+    $depositDue = round($estimatedTotal * ($depositPercent / 100), 2);
 
     $protectionOptions = [
         'security_deposit' => [
@@ -303,8 +331,19 @@ function hh_build_booking_quote($slug, DateTimeImmutable $checkin, DateTimeImmut
         'nights' => hh_booking_nights($checkin, $checkout),
         'nightly_rates' => $nightlyRates,
         'nightly_subtotal' => round($nightlySubtotal, 2),
+        'cleaning_fee' => $cleaningFee,
+        'pet_fee' => $petFee,
+        'pet_fee_applied' => $petFeeApplied,
+        'pets_allowed' => $petsAllowed,
+        'include_pet' => $includePet,
+        'state_tax_rate' => $stateTaxRate,
+        'city_tax_rate' => $cityTaxRate,
+        'state_tax_amount' => $stateTaxAmount,
+        'city_tax_amount' => $cityTaxAmount,
+        'taxable_subtotal' => $taxableSubtotal,
+        'estimated_total' => $estimatedTotal,
         'deposit_due' => $depositDue,
-        'remaining_balance' => round(max(0, $nightlySubtotal - $depositDue), 2),
+        'remaining_balance' => round(max(0, $estimatedTotal - $depositDue), 2),
         'pricing_source' => $pricingSource,
         'protection_options' => $protectionOptions,
     ];
