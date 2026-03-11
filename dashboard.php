@@ -73,6 +73,7 @@ if ($isLoggedIn && (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') && isset($
         $submittedIcalUrls = $_POST['ical_url'] ?? [];
         $submittedCleaningFees = $_POST['cleaning_fee'] ?? [];
         $submittedPetFees = $_POST['pet_fee'] ?? [];
+        $submittedPoolHeatFees = $_POST['pool_heat_fee'] ?? [];
         $submittedPetsAllowed = $_POST['pets_allowed'] ?? [];
         $submittedStateTaxRates = $_POST['state_tax_rate'] ?? [];
         $submittedCityTaxRates = $_POST['city_tax_rate'] ?? [];
@@ -83,6 +84,7 @@ if ($isLoggedIn && (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') && isset($
             !is_array($submittedIcalUrls) ||
             !is_array($submittedCleaningFees) ||
             !is_array($submittedPetFees) ||
+            !is_array($submittedPoolHeatFees) ||
             !is_array($submittedPetsAllowed) ||
             !is_array($submittedStateTaxRates) ||
             !is_array($submittedCityTaxRates) ||
@@ -108,6 +110,7 @@ if ($isLoggedIn && (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') && isset($
 
                 $cleaningFee = max(0, (float) ($submittedCleaningFees[$slug] ?? 0));
                 $petFee = max(0, (float) ($submittedPetFees[$slug] ?? 0));
+                $poolHeatFee = max(0, (float) ($submittedPoolHeatFees[$slug] ?? 0));
                 $petsAllowed = isset($submittedPetsAllowed[$slug]) && (string) $submittedPetsAllowed[$slug] === '1';
                 $stateTaxRate = max(0, (float) ($submittedStateTaxRates[$slug] ?? 0));
                 $cityTaxRate = max(0, (float) ($submittedCityTaxRates[$slug] ?? 0));
@@ -118,6 +121,7 @@ if ($isLoggedIn && (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') && isset($
                     'ical_url' => $icalUrl,
                     'cleaning_fee' => round($cleaningFee, 2),
                     'pet_fee' => round($petFee, 2),
+                    'pool_heat_fee' => round($poolHeatFee, 2),
                     'pets_allowed' => $petsAllowed,
                     'state_tax_rate' => round($stateTaxRate, 3),
                     'city_tax_rate' => round($cityTaxRate, 3),
@@ -497,72 +501,107 @@ $conversionRate = $totalViews > 0 ? round(($bookingIntents / $totalViews) * 100,
             <form method="POST" class="admin-form">
                     <input type="hidden" name="action" value="save_listing_booking_settings">
                     <h3>Booking sync settings</h3>
-                    <p class="form-note">Set minimum nights, cleaning/pet fees, tax rates, and Airbnb iCal URLs for each property.</p>
+                    <p class="form-note">Set minimum nights, booking extras like pet fees, tax rates, and Airbnb iCal URLs for each property.</p>
                     <?php foreach ($properties as $slug => $property): ?>
                         <?php $bookingSettings = $bookingSettingsByProperty[$slug] ?? hh_listing_booking_settings($settings, $slug); ?>
                         <div class="booking-settings-row">
-                            <label for="min-nights-<?php echo $escape($slug); ?>"><?php echo $escape($property['name']); ?></label>
-                            <input
-                                id="min-nights-<?php echo $escape($slug); ?>"
-                                type="number"
-                                min="1"
-                                step="1"
-                                name="min_nights[<?php echo $escape($slug); ?>]"
-                                value="<?php echo $escape((string) ($bookingSettings['min_nights'] ?? hh_default_min_nights($slug))); ?>"
-                                class="dashboard-select"
-                            >
-                            <input
-                                type="url"
-                                name="ical_url[<?php echo $escape($slug); ?>]"
-                                value="<?php echo $escape((string) ($bookingSettings['ical_url'] ?? '')); ?>"
-                                placeholder="https://www.airbnb.com/calendar/ical/...ics"
-                                class="dashboard-select"
-                            >
-                            <input
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                name="cleaning_fee[<?php echo $escape($slug); ?>]"
-                                value="<?php echo $escape(number_format((float) ($bookingSettings['cleaning_fee'] ?? 0), 2, '.', '')); ?>"
-                                placeholder="Cleaning fee (USD)"
-                                class="dashboard-select"
-                            >
-                            <input
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                name="pet_fee[<?php echo $escape($slug); ?>]"
-                                value="<?php echo $escape(number_format((float) ($bookingSettings['pet_fee'] ?? 0), 2, '.', '')); ?>"
-                                placeholder="Pet fee (USD)"
-                                class="dashboard-select"
-                            >
-                            <input
-                                type="number"
-                                min="0"
-                                step="0.001"
-                                name="state_tax_rate[<?php echo $escape($slug); ?>]"
-                                value="<?php echo $escape(number_format((float) ($bookingSettings['state_tax_rate'] ?? 0), 3, '.', '')); ?>"
-                                placeholder="State tax rate (%)"
-                                class="dashboard-select"
-                            >
-                            <input
-                                type="number"
-                                min="0"
-                                step="0.001"
-                                name="city_tax_rate[<?php echo $escape($slug); ?>]"
-                                value="<?php echo $escape(number_format((float) ($bookingSettings['city_tax_rate'] ?? 0), 3, '.', '')); ?>"
-                                placeholder="City tax rate (%)"
-                                class="dashboard-select"
-                            >
-                            <input
-                                type="number"
-                                min="0"
-                                step="0.001"
-                                name="county_tax_rate[<?php echo $escape($slug); ?>]"
-                                value="<?php echo $escape(number_format((float) ($bookingSettings['county_tax_rate'] ?? 0), 3, '.', '')); ?>"
-                                placeholder="County / tourism tax rate (%)"
-                                class="dashboard-select"
-                            >
+                            <div class="booking-settings-property">
+                                <label for="min-nights-<?php echo $escape($slug); ?>"><?php echo $escape($property['name']); ?></label>
+                            </div>
+                            <label class="booking-settings-field">
+                                <span>Minimum nights</span>
+                                <input
+                                    id="min-nights-<?php echo $escape($slug); ?>"
+                                    type="number"
+                                    min="1"
+                                    step="1"
+                                    name="min_nights[<?php echo $escape($slug); ?>]"
+                                    value="<?php echo $escape((string) ($bookingSettings['min_nights'] ?? hh_default_min_nights($slug))); ?>"
+                                    class="dashboard-select"
+                                >
+                            </label>
+                            <label class="booking-settings-field">
+                                <span>Airbnb iCal URL</span>
+                                <input
+                                    type="url"
+                                    name="ical_url[<?php echo $escape($slug); ?>]"
+                                    value="<?php echo $escape((string) ($bookingSettings['ical_url'] ?? '')); ?>"
+                                    placeholder="https://www.airbnb.com/calendar/ical/...ics"
+                                    class="dashboard-select"
+                                >
+                            </label>
+                            <label class="booking-settings-field">
+                                <span>Cleaning fee</span>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    name="cleaning_fee[<?php echo $escape($slug); ?>]"
+                                    value="<?php echo $escape(number_format((float) ($bookingSettings['cleaning_fee'] ?? 0), 2, '.', '')); ?>"
+                                    placeholder="Cleaning fee (USD)"
+                                    class="dashboard-select"
+                                >
+                            </label>
+                            <label class="booking-settings-field">
+                                <span>Pet fee</span>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    name="pet_fee[<?php echo $escape($slug); ?>]"
+                                    value="<?php echo $escape(number_format((float) ($bookingSettings['pet_fee'] ?? 0), 2, '.', '')); ?>"
+                                    placeholder="Pet fee (USD)"
+                                    class="dashboard-select"
+                                >
+                            </label>
+                            <label class="booking-settings-field">
+                                <span>Pool heat fee</span>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    name="pool_heat_fee[<?php echo $escape($slug); ?>]"
+                                    value="<?php echo $escape(number_format((float) ($bookingSettings['pool_heat_fee'] ?? 0), 2, '.', '')); ?>"
+                                    placeholder="Pool heat fee (USD)"
+                                    class="dashboard-select"
+                                >
+                            </label>
+                            <label class="booking-settings-field">
+                                <span>State tax rate</span>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="0.001"
+                                    name="state_tax_rate[<?php echo $escape($slug); ?>]"
+                                    value="<?php echo $escape(number_format((float) ($bookingSettings['state_tax_rate'] ?? 0), 3, '.', '')); ?>"
+                                    placeholder="State tax rate (%)"
+                                    class="dashboard-select"
+                                >
+                            </label>
+                            <label class="booking-settings-field">
+                                <span>City tax rate</span>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="0.001"
+                                    name="city_tax_rate[<?php echo $escape($slug); ?>]"
+                                    value="<?php echo $escape(number_format((float) ($bookingSettings['city_tax_rate'] ?? 0), 3, '.', '')); ?>"
+                                    placeholder="City tax rate (%)"
+                                    class="dashboard-select"
+                                >
+                            </label>
+                            <label class="booking-settings-field">
+                                <span>County / tourism tax rate</span>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="0.001"
+                                    name="county_tax_rate[<?php echo $escape($slug); ?>]"
+                                    value="<?php echo $escape(number_format((float) ($bookingSettings['county_tax_rate'] ?? 0), 3, '.', '')); ?>"
+                                    placeholder="County / tourism tax rate (%)"
+                                    class="dashboard-select"
+                                >
+                            </label>
                             <label class="admin-checkbox-row">
                                 <input type="checkbox" name="pets_allowed[<?php echo $escape($slug); ?>]" value="1" <?php echo !empty($bookingSettings['pets_allowed']) ? 'checked' : ''; ?>>
                                 <span>Pets allowed for <?php echo $escape($property['name']); ?></span>

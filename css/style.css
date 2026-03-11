@@ -1403,6 +1403,28 @@ header.scrolled {
   align-items: center;
 }
 
+.booking-settings-property {
+  align-self: start;
+}
+
+.booking-settings-property label {
+  display: block;
+  font-weight: 700;
+}
+
+.booking-settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.booking-settings-field span {
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
 .form-note {
   color: var(--text-muted);
   font-size: var(--text-sm);

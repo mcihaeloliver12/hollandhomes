@@ -254,6 +254,8 @@ function hh_property_fee_profile($slug) {
         'cleaning_fee' => max(0, (float) ($bookingSettings['cleaning_fee'] ?? 0)),
         'pet_fee' => max(0, (float) ($bookingSettings['pet_fee'] ?? 0)),
         'pets_allowed' => hh_boolean_like($bookingSettings['pets_allowed'] ?? false, false),
+        'pool_heat_fee' => max(0, (float) ($bookingSettings['pool_heat_fee'] ?? 0)),
+        'pool_heat_label' => trim((string) ($bookingSettings['pool_heat_label'] ?? 'Pool heating')),
         'state_tax_rate' => max(0, (float) ($bookingSettings['state_tax_rate'] ?? 0)),
         'state_tax_label' => trim((string) ($bookingSettings['state_tax_label'] ?? 'State tax')),
         'city_tax_rate' => max(0, (float) ($bookingSettings['city_tax_rate'] ?? 0)),
@@ -263,7 +265,7 @@ function hh_property_fee_profile($slug) {
     ];
 }
 
-function hh_build_booking_quote($slug, DateTimeImmutable $checkin, DateTimeImmutable $checkout, array $checkoutDefaults, PriceLabsAPI $priceLabs, $includePet = false) {
+function hh_build_booking_quote($slug, DateTimeImmutable $checkin, DateTimeImmutable $checkout, array $checkoutDefaults, PriceLabsAPI $priceLabs, $includePet = false, $includePoolHeat = false) {
     $nightlyMap = hh_load_pricelabs_calendar_data($slug, $priceLabs, hh_date_iso($checkin), hh_date_iso($checkout));
     $nightlyRates = [];
     $nightlySubtotal = 0.0;
@@ -296,13 +298,17 @@ function hh_build_booking_quote($slug, DateTimeImmutable $checkin, DateTimeImmut
     $petsAllowed = (bool) $feeProfile['pets_allowed'];
     $includePet = $petsAllowed ? hh_boolean_like($includePet, false) : false;
     $petFeeApplied = $includePet ? $petFee : 0.0;
+    $poolHeatFee = (float) $feeProfile['pool_heat_fee'];
+    $poolHeatLabel = (string) $feeProfile['pool_heat_label'];
+    $includePoolHeat = $poolHeatFee > 0 ? hh_boolean_like($includePoolHeat, false) : false;
+    $poolHeatFeeApplied = $includePoolHeat ? round($poolHeatFee * hh_booking_nights($checkin, $checkout), 2) : 0.0;
     $stateTaxRate = (float) $feeProfile['state_tax_rate'];
     $stateTaxLabel = (string) $feeProfile['state_tax_label'];
     $cityTaxRate = (float) $feeProfile['city_tax_rate'];
     $cityTaxLabel = (string) $feeProfile['city_tax_label'];
     $countyTaxRate = (float) $feeProfile['county_tax_rate'];
     $countyTaxLabel = (string) $feeProfile['county_tax_label'];
-    $taxableSubtotal = round($nightlySubtotal + $cleaningFee + $petFeeApplied, 2);
+    $taxableSubtotal = round($nightlySubtotal + $cleaningFee + $petFeeApplied + $poolHeatFeeApplied, 2);
     $stateTaxAmount = round($taxableSubtotal * ($stateTaxRate / 100), 2);
     $cityTaxAmount = round($taxableSubtotal * ($cityTaxRate / 100), 2);
     $countyTaxAmount = round($taxableSubtotal * ($countyTaxRate / 100), 2);
@@ -343,6 +349,10 @@ function hh_build_booking_quote($slug, DateTimeImmutable $checkin, DateTimeImmut
         'pet_fee_applied' => $petFeeApplied,
         'pets_allowed' => $petsAllowed,
         'include_pet' => $includePet,
+        'pool_heat_fee' => $poolHeatFee,
+        'pool_heat_label' => $poolHeatLabel,
+        'pool_heat_fee_applied' => $poolHeatFeeApplied,
+        'include_pool_heat' => $includePoolHeat,
         'state_tax_rate' => $stateTaxRate,
         'state_tax_label' => $stateTaxLabel,
         'city_tax_rate' => $cityTaxRate,

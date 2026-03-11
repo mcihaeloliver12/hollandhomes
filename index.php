@@ -407,7 +407,7 @@ $bookingValues = [
                 <div class="home-final-cta-actions">
                     <?php foreach ($homepageSlugs as $slug): ?>
                         <?php $property = $properties[$slug] ?? []; ?>
-                        <a href="property.php?id=<?php echo $escape($slug); ?>" class="btn<?php echo $slug === 'villa' ? ' btn-secondary' : ''; ?>"><?php echo $escape($property['name'] ?? ucfirst($slug)); ?></a>
+                        <a href="property.php?id=<?php echo $escape($slug); ?>" class="btn"><?php echo $escape($property['name'] ?? ucfirst($slug)); ?></a>
                     <?php endforeach; ?>
                 </div>
             </div>

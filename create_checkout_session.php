@@ -37,6 +37,7 @@ if (!$validation['valid']) {
 
 $protection = strtolower(trim((string) ($_POST['protection'] ?? 'waivo')));
 $includePet = hh_boolean_like($_POST['include_pet'] ?? '0', false);
+$includePoolHeat = hh_boolean_like($_POST['include_pool_heat'] ?? '0', false);
 $firstName = trim((string) ($_POST['first_name'] ?? ''));
 $lastName = trim((string) ($_POST['last_name'] ?? ''));
 $email = trim((string) ($_POST['email'] ?? ''));
@@ -50,6 +51,7 @@ $checkoutParams = [
     'checkout' => (string) ($_POST['checkout'] ?? ''),
     'protection' => $protection,
     'include_pet' => $includePet ? '1' : '0',
+    'include_pool_heat' => $includePoolHeat ? '1' : '0',
     'first_name' => $firstName,
     'last_name' => $lastName,
     'email' => $email,
@@ -80,7 +82,7 @@ if (!$contactAck || !$termsAck) {
 $checkoutDefaults = hh_checkout_defaults();
 
 try {
-    $quote = hh_build_booking_quote($id, $validation['checkin'], $validation['checkout'], $checkoutDefaults, $priceLabs, $includePet);
+    $quote = hh_build_booking_quote($id, $validation['checkin'], $validation['checkout'], $checkoutDefaults, $priceLabs, $includePet, $includePoolHeat);
 } catch (RuntimeException $exception) {
     header('Location: ' . hh_booking_error_redirect_url($id, $exception->getMessage()));
     exit;
@@ -105,6 +107,7 @@ $successUrl = $baseUrl . '/checkout.php?' . http_build_query([
     'checkout' => hh_date_iso($validation['checkout']),
     'protection' => $protection,
     'include_pet' => $includePet ? '1' : '0',
+    'include_pool_heat' => $includePoolHeat ? '1' : '0',
     'status' => 'success',
     'session_id' => '{CHECKOUT_SESSION_ID}',
 ]);
@@ -114,6 +117,7 @@ $cancelUrl = $baseUrl . '/checkout.php?' . http_build_query([
     'checkout' => hh_date_iso($validation['checkout']),
     'protection' => $protection,
     'include_pet' => $includePet ? '1' : '0',
+    'include_pool_heat' => $includePoolHeat ? '1' : '0',
     'status' => 'cancelled',
     'first_name' => $firstName,
     'last_name' => $lastName,
@@ -140,8 +144,10 @@ $fields = [
         'guest_phone' => $phone,
         'protection' => $protectionOption['label'],
         'include_pet' => !empty($quote['include_pet']) ? 'yes' : 'no',
+        'include_pool_heat' => !empty($quote['include_pool_heat']) ? 'yes' : 'no',
         'cleaning_fee' => number_format((float) $quote['cleaning_fee'], 2, '.', ''),
         'pet_fee' => number_format((float) $quote['pet_fee_applied'], 2, '.', ''),
+        'pool_heat_fee' => number_format((float) $quote['pool_heat_fee_applied'], 2, '.', ''),
         'state_tax_rate' => number_format((float) $quote['state_tax_rate'], 2, '.', ''),
         'state_tax_amount' => number_format((float) $quote['state_tax_amount'], 2, '.', ''),
         'state_tax_label' => (string) ($quote['state_tax_label'] ?? 'State tax'),

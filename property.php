@@ -71,7 +71,7 @@ $listingType = $airbnbData['listing_type'] ?: 'Vacation rental';
 if ($id === 'home') {
     $listingType = 'Oasis';
 }
-$description = trim((string) ($airbnbData['description'] ?? $property['summary']));
+$description = trim((string) ($property['fallback_airbnb']['description'] ?? $property['summary']));
 $summary = trim((string) ($property['summary'] ?? $property['name']));
 $bedroomsText = hh_airbnb_fact($airbnbData['bedrooms'], 'bedroom');
 $bedsText = hh_airbnb_fact($airbnbData['beds'], 'bed');
@@ -1235,10 +1235,6 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
                         <span>Airbnb reviews</span>
                     </div>
                 </div>
-
-                <p class="hero-panel-note">
-                    Designed for a memorable stay, with direct booking available once your dates clear availability and minimum-stay rules.
-                </p>
             </aside>
         </div>
     </section>
@@ -1534,18 +1530,6 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
                         </div>
                     </div>
 
-                    <p class="calendar-disclaimer">
-                        <?php if ($availabilitySource === 'live'): ?>
-                            Booked dates are synced from your Airbnb calendar feed.
-                        <?php elseif ($availabilitySource === 'stale-cache'): ?>
-                            Showing the last successful calendar sync because the latest iCal refresh failed.
-                        <?php elseif ($availabilitySource === 'unavailable'): ?>
-                            Calendar feed could not be refreshed right now. Please verify dates before checkout.
-                        <?php else: ?>
-                            Booked-date sync is not configured yet, so final confirmation should be checked before collecting payment.
-                        <?php endif; ?>
-                    </p>
-
                     <form action="checkout.php" method="get" class="direct-booking-form" id="direct-booking-form">
                         <input type="hidden" name="id" value="<?php echo $escape($id); ?>">
                         <input type="hidden" name="checkin" id="booking-checkin-input" value="">
@@ -1555,11 +1539,11 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
                     </form>
 
                     <p class="booking-followup-note">
-                        The full address and direct contact details are shared after your booking is confirmed.
+                        The address information and direct contact number of the host will be provided once the booking is confirmed.
                     </p>
 
                     <a href="<?php echo $escape($property['airbnb_url']); ?>" class="text-link booking-fallback-link" target="_blank" rel="noopener noreferrer">
-                        Prefer Airbnb instead? Book on Airbnb
+                        Prefer using Airbnb? Reserve your stay through Airbnb.
                     </a>
                 </div>
             </aside>

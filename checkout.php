@@ -33,9 +33,10 @@ if (!$validation['valid']) {
 
 $checkoutDefaults = hh_checkout_defaults();
 $includePet = hh_boolean_like($_GET['include_pet'] ?? '0', false);
+$includePoolHeat = hh_boolean_like($_GET['include_pool_heat'] ?? '0', false);
 
 try {
-    $quote = hh_build_booking_quote($id, $validation['checkin'], $validation['checkout'], $checkoutDefaults, $priceLabs, $includePet);
+    $quote = hh_build_booking_quote($id, $validation['checkin'], $validation['checkout'], $checkoutDefaults, $priceLabs, $includePet, $includePoolHeat);
 } catch (RuntimeException $exception) {
     header('Location: ' . hh_booking_error_redirect_url($id, $exception->getMessage()));
     exit;
@@ -159,15 +160,19 @@ $phone = trim((string) ($_GET['phone'] ?? ''));
                             <h2>Apply booking extras</h2>
                         </div>
                         <div class="checkout-note-stack">
-                            <p>Cleaning fees, optional pet fees, plus state, city, and county/tourism taxes are included in your booking estimate.</p>
+                            <p>Cleaning fees, optional pet fees, and applicable lodging taxes are included in your booking estimate.</p>
                         </div>
-                        <?php if (!empty($quote['pets_allowed'])): ?>
+                        <?php if (!empty($quote['pets_allowed']) && (float) ($quote['pet_fee'] ?? 0) > 0): ?>
                             <label class="form-check">
                                 <input type="checkbox" name="include_pet" value="1" <?php echo !empty($quote['include_pet']) ? 'checked' : ''; ?>>
                                 <span>Add pet fee (one-time): <?php echo $escape(hh_money_format($quote['pet_fee'], $currency)); ?></span>
                             </label>
-                        <?php else: ?>
-                            <p class="form-note">Pets are not allowed at this property.</p>
+                        <?php endif; ?>
+                        <?php if ((float) ($quote['pool_heat_fee'] ?? 0) > 0): ?>
+                            <label class="form-check">
+                                <input type="checkbox" name="include_pool_heat" value="1" <?php echo !empty($quote['include_pool_heat']) ? 'checked' : ''; ?>>
+                                <span>Add <?php echo $escape((string) ($quote['pool_heat_label'] ?? 'Pool heating')); ?>: <?php echo $escape(hh_money_format((float) ($quote['pool_heat_fee'] ?? 0), $currency)); ?> per night</span>
+                            </label>
                         <?php endif; ?>
                     </div>
 
@@ -243,22 +248,36 @@ $phone = trim((string) ($_GET['phone'] ?? ''));
                             <span>Cleaning fee</span>
                             <strong><?php echo $escape(hh_money_format($quote['cleaning_fee'], $currency)); ?></strong>
                         </div>
+                        <?php if (!empty($quote['pets_allowed']) && (float) ($quote['pet_fee'] ?? 0) > 0): ?>
                         <div class="quote-row">
                             <span>Pet fee</span>
                             <strong id="pet-fee-amount"><?php echo $escape(hh_money_format($quote['pet_fee_applied'], $currency)); ?></strong>
                         </div>
+                        <?php endif; ?>
+                        <?php if ((float) ($quote['pool_heat_fee'] ?? 0) > 0): ?>
                         <div class="quote-row">
-                            <span><?php echo $escape((string) ($quote['state_tax_label'] ?? 'State tax')); ?> tax (<?php echo $escape(number_format((float) $quote['state_tax_rate'], 2)); ?>%)</span>
+                            <span><?php echo $escape((string) ($quote['pool_heat_label'] ?? 'Pool heating')); ?></span>
+                            <strong id="pool-heat-fee-amount"><?php echo $escape(hh_money_format($quote['pool_heat_fee_applied'], $currency)); ?></strong>
+                        </div>
+                        <?php endif; ?>
+                        <?php if ((float) ($quote['state_tax_rate'] ?? 0) > 0 && trim((string) ($quote['state_tax_label'] ?? '')) !== ''): ?>
+                        <div class="quote-row">
+                            <span><?php echo $escape((string) ($quote['state_tax_label'] ?? 'State tax')); ?></span>
                             <strong id="state-tax-amount"><?php echo $escape(hh_money_format($quote['state_tax_amount'], $currency)); ?></strong>
                         </div>
+                        <?php endif; ?>
+                        <?php if ((float) ($quote['city_tax_rate'] ?? 0) > 0 && trim((string) ($quote['city_tax_label'] ?? '')) !== ''): ?>
                         <div class="quote-row">
-                            <span><?php echo $escape((string) ($quote['city_tax_label'] ?? 'City')); ?> tax (<?php echo $escape(number_format((float) $quote['city_tax_rate'], 2)); ?>%)</span>
+                            <span><?php echo $escape((string) ($quote['city_tax_label'] ?? 'City')); ?></span>
                             <strong id="city-tax-amount"><?php echo $escape(hh_money_format($quote['city_tax_amount'], $currency)); ?></strong>
                         </div>
+                        <?php endif; ?>
+                        <?php if ((float) ($quote['county_tax_rate'] ?? 0) > 0 && trim((string) ($quote['county_tax_label'] ?? '')) !== ''): ?>
                         <div class="quote-row">
-                            <span><?php echo $escape((string) ($quote['county_tax_label'] ?? 'County')); ?> tax (<?php echo $escape(number_format((float) $quote['county_tax_rate'], 2)); ?>%)</span>
+                            <span><?php echo $escape((string) ($quote['county_tax_label'] ?? 'County')); ?></span>
                             <strong id="county-tax-amount"><?php echo $escape(hh_money_format($quote['county_tax_amount'], $currency)); ?></strong>
                         </div>
+                        <?php endif; ?>
                         <div class="quote-row">
                             <span>Estimated booking total</span>
                             <strong id="estimated-total-amount"><?php echo $escape(hh_money_format($quote['estimated_total'], $currency)); ?></strong>
@@ -310,15 +329,19 @@ $phone = trim((string) ($_GET['phone'] ?? ''));
             const protectionLabel = document.getElementById('selected-protection-label');
             const depositDueAmount = document.getElementById('deposit-due-amount');
             const petFeeAmount = document.getElementById('pet-fee-amount');
+            const poolHeatFeeAmount = document.getElementById('pool-heat-fee-amount');
             const stateTaxAmount = document.getElementById('state-tax-amount');
             const cityTaxAmount = document.getElementById('city-tax-amount');
             const countyTaxAmount = document.getElementById('county-tax-amount');
             const estimatedTotalAmount = document.getElementById('estimated-total-amount');
             const remainingBalanceAmount = document.getElementById('remaining-balance-amount');
             const includePetInput = document.querySelector('input[name="include_pet"]');
+            const includePoolHeatInput = document.querySelector('input[name="include_pool_heat"]');
             const nightlySubtotal = <?php echo json_encode((float) $quote['nightly_subtotal']); ?>;
             const cleaningFee = <?php echo json_encode((float) $quote['cleaning_fee']); ?>;
             const petFee = <?php echo json_encode((float) $quote['pet_fee']); ?>;
+            const poolHeatFee = <?php echo json_encode((float) $quote['pool_heat_fee']); ?>;
+            const nights = <?php echo json_encode((int) $quote['nights']); ?>;
             const stateTaxRate = <?php echo json_encode((float) $quote['state_tax_rate']); ?>;
             const cityTaxRate = <?php echo json_encode((float) $quote['city_tax_rate']); ?>;
             const countyTaxRate = <?php echo json_encode((float) $quote['county_tax_rate']); ?>;
@@ -330,14 +353,15 @@ $phone = trim((string) ($_GET['phone'] ?? ''));
 
             const computeTotals = () => {
                 const petApplied = includePetInput?.checked ? petFee : 0;
-                const taxableSubtotal = roundMoney(nightlySubtotal + cleaningFee + petApplied);
+                const poolHeatApplied = includePoolHeatInput?.checked ? roundMoney(poolHeatFee * nights) : 0;
+                const taxableSubtotal = roundMoney(nightlySubtotal + cleaningFee + petApplied + poolHeatApplied);
                 const stateTax = roundMoney(taxableSubtotal * (stateTaxRate / 100));
                 const cityTax = roundMoney(taxableSubtotal * (cityTaxRate / 100));
                 const countyTax = roundMoney(taxableSubtotal * (countyTaxRate / 100));
                 const estimatedTotal = roundMoney(taxableSubtotal + stateTax + cityTax + countyTax);
                 const deposit = roundMoney(estimatedTotal * (depositPercent / 100));
                 const remainingBalance = roundMoney(estimatedTotal - deposit);
-                return { petApplied, stateTax, cityTax, countyTax, estimatedTotal, deposit, remainingBalance };
+                return { petApplied, poolHeatApplied, stateTax, cityTax, countyTax, estimatedTotal, deposit, remainingBalance };
             };
 
             const updateSelection = () => {
@@ -356,6 +380,9 @@ $phone = trim((string) ($_GET['phone'] ?? ''));
                 }
                 if (petFeeAmount) {
                     petFeeAmount.textContent = formatMoney(totals.petApplied);
+                }
+                if (poolHeatFeeAmount) {
+                    poolHeatFeeAmount.textContent = formatMoney(totals.poolHeatApplied);
                 }
                 if (stateTaxAmount) {
                     stateTaxAmount.textContent = formatMoney(totals.stateTax);
@@ -392,6 +419,9 @@ $phone = trim((string) ($_GET['phone'] ?? ''));
 
             if (includePetInput) {
                 includePetInput.addEventListener('change', updateSelection);
+            }
+            if (includePoolHeatInput) {
+                includePoolHeatInput.addEventListener('change', updateSelection);
             }
 
             updateSelection();
