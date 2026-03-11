@@ -41,6 +41,10 @@ $availabilitySource = (string) ($availabilityData['source'] ?? 'not-configured')
 
 $propertyDir = __DIR__ . '/' . ucfirst($id) . '/Photos/';
 $galleryPhotos = [];
+$heroImage = hh_property_hero_image($property, $settings);
+if ($heroImage !== '') {
+    $galleryPhotos[] = $heroImage;
+}
 if (is_dir($propertyDir)) {
     $scanned = scandir($propertyDir);
     foreach ($scanned as $file) {
@@ -48,11 +52,14 @@ if (is_dir($propertyDir)) {
             continue;
         }
 
-        $path = ucfirst($id) . '/Photos/' . $file;
-        if ($path === $property['hero_image']) {
+        if (!preg_match('/\.(jpg|jpeg|png|webp|avif)$/i', $file)) {
             continue;
         }
-        $galleryPhotos[] = $path;
+
+        $path = ucfirst($id) . '/Photos/' . $file;
+        if (!in_array($path, $galleryPhotos, true)) {
+            $galleryPhotos[] = $path;
+        }
     }
 }
 
@@ -63,7 +70,6 @@ $factList = array_filter([
     $airbnbData['listing_label'] ?: $airbnbData['listing_type'],
 ]);
 
-$heroImage = hh_property_hero_image($property, $settings);
 $locationText = $airbnbData['location'] ?: 'Featured destination';
 $ratingText = $airbnbData['rating'] ?: 'New';
 $reviewsCount = (string) ($airbnbData['reviews_count'] ?? '0');
@@ -76,11 +82,12 @@ $summary = trim((string) ($property['summary'] ?? $property['name']));
 $bedroomsText = hh_airbnb_fact($airbnbData['bedrooms'], 'bedroom');
 $bedsText = hh_airbnb_fact($airbnbData['beds'], 'bed');
 $bathsText = hh_airbnb_fact($airbnbData['baths'], 'bath');
+$additionalAmenityGroups = is_array($airbnbData['amenity_groups'] ?? null) ? $airbnbData['amenity_groups'] : [];
 
 $primaryGalleryPhoto = $galleryPhotos[0] ?? '';
 $secondaryGalleryPhotos = array_slice($galleryPhotos, 1);
 $visibleSecondaryGalleryLimit = 5;
-$hiddenSecondaryGalleryCount = max(0, count($secondaryGalleryPhotos) - $visibleSecondaryGalleryLimit);
+$totalGalleryPhotoCount = count($galleryPhotos);
 
 $reviewsApi = new OutscraperReviews(OUTSCRAPER_API_KEY);
 $propertyReviews = $reviewsApi->getPropertyReviews($id);
@@ -794,6 +801,42 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
             background: rgba(27,22,19,0.018);
         }
 
+        .additional-info-disclosure {
+            margin-top: 8px;
+            border: 1px solid var(--hh-line);
+            border-radius: var(--hh-radius-lg);
+            background: rgba(27,22,19,0.018);
+            padding: 18px 20px;
+        }
+
+        .additional-info-disclosure summary {
+            cursor: pointer;
+            list-style: none;
+            font-family: var(--hh-display);
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .additional-info-disclosure summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .additional-info-disclosure summary::after {
+            content: "+";
+            font-size: 1.3rem;
+            line-height: 1;
+            color: var(--hh-gold);
+        }
+
+        .additional-info-disclosure[open] summary::after {
+            content: "-";
+        }
+
         .property-sidebar {
             position: relative;
         }
@@ -1247,6 +1290,7 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
             <a href="#gallery">Gallery</a>
             <a href="#amenities">Amenities</a>
             <a href="#stay-info">Stay Info</a>
+            <?php if (!empty($additionalAmenityGroups)): ?><a href="#more-info">More Info</a><?php endif; ?>
             <a href="#guest-reviews">Reviews</a>
             <a href="#book">Book Direct</a>
         </nav>
@@ -1384,15 +1428,14 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
                                         </button>
                                     <?php endforeach; ?>
                                 </div>
-                                <?php if ($hiddenSecondaryGalleryCount > 0): ?>
+                                <?php if ($totalGalleryPhotoCount > ($visibleSecondaryGalleryLimit + 1)): ?>
                                     <div style="margin-top:14px;">
                                         <button
                                             type="button"
                                             class="btn btn-secondary"
-                                            id="gallery-see-more"
-                                            data-hidden-count="<?php echo $escape((string) $hiddenSecondaryGalleryCount); ?>"
+                                            id="gallery-open-all"
                                         >
-                                            See more photos (<?php echo $escape((string) $hiddenSecondaryGalleryCount); ?>)
+                                            Open full gallery (<?php echo $escape((string) $totalGalleryPhotoCount); ?> photos)
                                         </button>
                                     </div>
                                 <?php endif; ?>
@@ -1450,6 +1493,29 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
                         </article>
                     </div>
                 </section>
+
+                <?php if (!empty($additionalAmenityGroups)): ?>
+                <section id="more-info" class="content-card-luxury fade-in-section">
+                    <span class="eyebrow-luxury">Additional info</span>
+                    <h2 class="section-title-luxury">More of what guests can use during the stay</h2>
+
+                    <details class="additional-info-disclosure">
+                        <summary>Open the full Airbnb amenities breakdown</summary>
+                        <div class="amenity-grid" style="margin-top:18px;">
+                            <?php foreach ($additionalAmenityGroups as $group): ?>
+                                <article class="amenity-card">
+                                    <h3><?php echo $escape($group['title'] ?? 'More details'); ?></h3>
+                                    <ul class="amenity-list">
+                                        <?php foreach (($group['items'] ?? []) as $item): ?>
+                                            <li><?php echo $escape($item); ?></li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                </article>
+                            <?php endforeach; ?>
+                        </div>
+                    </details>
+                </section>
+                <?php endif; ?>
 
                 <?php if (!empty($propertyReviews)): ?>
                 <section id="guest-reviews" class="content-card-luxury fade-in-section">
@@ -1651,13 +1717,14 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
 
         const galleryButtons = Array.from(document.querySelectorAll('[data-gallery-src]'));
         const galleryShell = document.querySelector('.gallery-shell');
-        const seeMoreButton = document.getElementById('gallery-see-more');
+        const openAllButton = document.getElementById('gallery-open-all');
         const lightbox = document.getElementById('gallery-lightbox');
         const lightboxImage = document.getElementById('lightbox-image');
         const lightboxClose = document.getElementById('lightbox-close');
         const lightboxPrev = document.getElementById('lightbox-prev');
         const lightboxNext = document.getElementById('lightbox-next');
         const lightboxCounter = document.getElementById('lightbox-counter');
+        let openLightbox = null;
 
         if (galleryButtons.length && lightbox && lightboxImage && lightboxClose && lightboxPrev && lightboxNext && lightboxCounter) {
             const galleryItems = galleryButtons.map((button, index) => {
@@ -1678,7 +1745,7 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
                 lightboxCounter.textContent = `${currentIndex + 1} / ${galleryItems.length}`;
             };
 
-            const openLightbox = (index) => {
+            openLightbox = (index) => {
                 currentIndex = index;
                 updateLightbox();
                 lightbox.classList.add('is-open');
@@ -1729,26 +1796,10 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
             });
         }
 
-        if (galleryShell && seeMoreButton) {
-            const collapsedThumbs = galleryShell.querySelectorAll('.media-thumb-collapsed');
-            const hiddenCount = Number(seeMoreButton.getAttribute('data-hidden-count') || '0');
-            let expanded = false;
-
-            const syncSeeMoreState = () => {
-                collapsedThumbs.forEach((thumb) => {
-                    thumb.style.display = expanded ? '' : 'none';
-                });
-                seeMoreButton.textContent = expanded
-                    ? 'Show fewer photos'
-                    : `See more photos (${hiddenCount})`;
-            };
-
-            seeMoreButton.addEventListener('click', () => {
-                expanded = !expanded;
-                syncSeeMoreState();
+        if (galleryShell && openAllButton && openLightbox) {
+            openAllButton.addEventListener('click', () => {
+                openLightbox(0);
             });
-
-            syncSeeMoreState();
         }
     });
 </script>

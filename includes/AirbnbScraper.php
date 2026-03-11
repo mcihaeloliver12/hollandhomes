@@ -18,7 +18,12 @@ class AirbnbScraper {
 
         if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $this->cacheTime) {
             $cached = json_decode(file_get_contents($cacheFile), true);
-            if (is_array($cached) && array_key_exists('source', $cached) && array_key_exists('title', $cached)) {
+            if (
+                is_array($cached) &&
+                array_key_exists('source', $cached) &&
+                array_key_exists('title', $cached) &&
+                array_key_exists('amenity_groups', $cached)
+            ) {
                 return $cached;
             }
         }
@@ -35,6 +40,7 @@ class AirbnbScraper {
             'reviews_count' => 0,
             'rating' => 'N/A',
             'reviews' => [],
+            'amenity_groups' => [],
             'lat' => null,
             'lng' => null,
             'source' => 'unverified',
@@ -93,6 +99,7 @@ class AirbnbScraper {
             'baths' => null,
             'reviews_count' => 0,
             'rating' => 'N/A',
+            'amenity_groups' => [],
             'lat' => null,
             'lng' => null,
         ];
@@ -129,7 +136,99 @@ class AirbnbScraper {
             $result['lng'] = (float) $longitude;
         }
 
+        $result['amenity_groups'] = $this->parseAmenityGroups($html);
+
         return $result;
+    }
+
+    private function parseAmenityGroups($html) {
+        $groups = $this->extractJsonArrayAfterKey($html, 'seeAllAmenitiesGroups":[');
+        if (!is_array($groups)) {
+            return [];
+        }
+
+        $normalized = [];
+        foreach ($groups as $group) {
+            if (!is_array($group)) {
+                continue;
+            }
+
+            $items = [];
+            foreach (($group['amenities'] ?? []) as $amenity) {
+                if (!is_array($amenity) || empty($amenity['available']) || empty($amenity['title'])) {
+                    continue;
+                }
+
+                $title = trim((string) $amenity['title']);
+                $subtitle = trim((string) ($amenity['subtitle'] ?? ''));
+                $items[] = $subtitle !== '' ? $title . ' - ' . $subtitle : $title;
+            }
+
+            if ($items === []) {
+                continue;
+            }
+
+            $title = trim((string) ($group['title'] ?? 'More details'));
+            if (strtolower($title) === 'not included') {
+                continue;
+            }
+
+            $normalized[] = [
+                'title' => $title !== '' ? $title : 'More details',
+                'items' => $items,
+            ];
+        }
+
+        return $normalized;
+    }
+
+    private function extractJsonArrayAfterKey($html, $key) {
+        $start = strpos($html, $key);
+        if ($start === false) {
+            return null;
+        }
+
+        $index = $start + strlen($key) - 1;
+        $depth = 0;
+        $inString = false;
+        $escaped = false;
+        $length = strlen($html);
+
+        for ($cursor = $index; $cursor < $length; $cursor++) {
+            $char = $html[$cursor];
+
+            if ($inString) {
+                if ($escaped) {
+                    $escaped = false;
+                    continue;
+                }
+
+                if ($char === '\\') {
+                    $escaped = true;
+                } elseif ($char === '"') {
+                    $inString = false;
+                }
+                continue;
+            }
+
+            if ($char === '"') {
+                $inString = true;
+                continue;
+            }
+
+            if ($char === '[') {
+                $depth++;
+            } elseif ($char === ']') {
+                $depth--;
+                if ($depth === 0) {
+                    $json = substr($html, $index, $cursor - $index + 1);
+                    $decoded = json_decode($json, true);
+                    return is_array($decoded) ? $decoded : null;
+                }
+            }
+        }
+
+        return null;
     }
 
     private function parseTitleFacts($title, array &$result) {
