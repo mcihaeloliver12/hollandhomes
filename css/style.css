@@ -2923,6 +2923,14 @@ body.home-page .btn-secondary:hover {
     order: initial;
   }
 
+  .residence-feature-media {
+    order: 2;
+  }
+
+  .residence-feature-copy {
+    order: 1;
+  }
+
   .home-ledger-card {
     grid-template-columns: 4.5rem minmax(0, 1fr);
     align-items: start;
