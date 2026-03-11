@@ -238,6 +238,48 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
             width: 100%;
         }
 
+        .mobile-nav-toggle {
+            display: none;
+            width: 48px;
+            height: 48px;
+            padding: 0;
+            border: 1px solid rgba(27,22,19,0.14);
+            background: rgba(252,248,242,0.9);
+            color: var(--hh-text);
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+        }
+
+        .mobile-nav-toggle span {
+            display: block;
+            width: 18px;
+            height: 2px;
+            background: currentColor;
+        }
+
+        .mobile-nav-panel {
+            border-top: 1px solid rgba(27,22,19,0.08);
+            background: rgba(249,243,235,0.98);
+            box-shadow: 0 14px 30px rgba(18, 16, 13, 0.08);
+        }
+
+        .mobile-nav-panel-inner {
+            display: grid;
+            gap: 0.25rem;
+            padding: 0.8rem 0 1rem;
+        }
+
+        .mobile-nav-panel-inner a {
+            padding: 0.8rem 0;
+            font-size: 0.82rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(27,22,19,0.08);
+        }
+
         .property-hero-luxury {
             position: relative;
             min-height: 82vh;
@@ -1142,6 +1184,14 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
         }
 
         @media (max-width: 768px) {
+            .mobile-nav-toggle {
+                display: inline-flex;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
             .property-hero-luxury {
                 min-height: auto;
                 padding: 120px 0 40px;
@@ -1209,6 +1259,11 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
     <header id="main-header">
         <div class="container header-inner">
             <a href="index.php" class="logo">Holland <i>Homes</i></a>
+            <button type="button" class="mobile-nav-toggle" id="mobile-nav-toggle" aria-expanded="false" aria-controls="mobile-nav-panel" aria-label="Open menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
             <nav class="nav-links">
                 <a href="index.php#properties">Properties</a>
                 <a href="#overview">Overview</a>
@@ -1216,6 +1271,15 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
                 <a href="#gallery">Gallery</a>
                 <a href="#book">Book</a>
             </nav>
+        </div>
+        <div class="mobile-nav-panel" id="mobile-nav-panel" hidden>
+            <div class="container mobile-nav-panel-inner">
+                <a href="index.php#properties">Properties</a>
+                <a href="#overview">Overview</a>
+                <a href="#details">Highlights</a>
+                <a href="#gallery">Gallery</a>
+                <a href="#book">Book</a>
+            </div>
         </div>
     </header>
 
@@ -1678,14 +1742,19 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const header = document.getElementById('main-header');
+        const mobileNavToggle = document.getElementById('mobile-nav-toggle');
+        const mobileNavPanel = document.getElementById('mobile-nav-panel');
 
-        window.addEventListener('scroll', () => {
+        const toggleHeaderState = () => {
             if (window.scrollY > 24) {
                 header.classList.add('scrolled');
             } else {
                 header.classList.remove('scrolled');
             }
-        });
+        };
+
+        toggleHeaderState();
+        window.addEventListener('scroll', toggleHeaderState, { passive: true });
 
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry) => {
@@ -1714,6 +1783,36 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
                 window.scrollTo({ top: y, behavior: 'smooth' });
             });
         });
+
+        if (mobileNavToggle && mobileNavPanel) {
+            const closeMobileNav = () => {
+                mobileNavToggle.setAttribute('aria-expanded', 'false');
+                mobileNavPanel.hidden = true;
+            };
+
+            const openMobileNav = () => {
+                mobileNavToggle.setAttribute('aria-expanded', 'true');
+                mobileNavPanel.hidden = false;
+            };
+
+            mobileNavToggle.addEventListener('click', () => {
+                if (mobileNavToggle.getAttribute('aria-expanded') === 'true') {
+                    closeMobileNav();
+                } else {
+                    openMobileNav();
+                }
+            });
+
+            mobileNavPanel.querySelectorAll('a').forEach((link) => {
+                link.addEventListener('click', closeMobileNav);
+            });
+
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 768) {
+                    closeMobileNav();
+                }
+            });
+        }
 
         const galleryButtons = Array.from(document.querySelectorAll('[data-gallery-src]'));
         const galleryShell = document.querySelector('.gallery-shell');
