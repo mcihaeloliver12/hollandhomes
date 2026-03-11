@@ -148,12 +148,25 @@ $bookingValues = [
     <header id="main-header">
         <div class="container header-inner">
             <a href="index.php" class="logo">Holland<i>Homes</i></a>
+            <button type="button" class="mobile-nav-toggle" id="mobile-nav-toggle" aria-expanded="false" aria-controls="mobile-nav-panel" aria-label="Open menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
             <nav class="nav-links">
                 <a href="#collection">Collection</a>
                 <a href="#properties">Residences</a>
                 <?php if ($hasReviews): ?><a href="#reviews">Reviews</a><?php endif; ?>
                 <a href="#contact">Book Direct</a>
             </nav>
+        </div>
+        <div class="mobile-nav-panel" id="mobile-nav-panel" hidden>
+            <div class="container mobile-nav-panel-inner">
+                <a href="#collection">Collection</a>
+                <a href="#properties">Residences</a>
+                <?php if ($hasReviews): ?><a href="#reviews">Reviews</a><?php endif; ?>
+                <a href="#contact">Book Direct</a>
+            </div>
         </div>
     </header>
 
@@ -450,6 +463,8 @@ $bookingValues = [
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const header = document.getElementById('main-header');
+            const mobileNavToggle = document.getElementById('mobile-nav-toggle');
+            const mobileNavPanel = document.getElementById('mobile-nav-panel');
 
             const fadeObserver = new IntersectionObserver((entries) => {
                 entries.forEach((entry) => {
@@ -474,6 +489,38 @@ $bookingValues = [
 
                 toggleHeaderState();
                 window.addEventListener('scroll', toggleHeaderState, { passive: true });
+            }
+
+            if (mobileNavToggle && mobileNavPanel) {
+                const closeMobileNav = () => {
+                    mobileNavToggle.setAttribute('aria-expanded', 'false');
+                    mobileNavPanel.hidden = true;
+                    document.body.classList.remove('mobile-nav-open');
+                };
+
+                const openMobileNav = () => {
+                    mobileNavToggle.setAttribute('aria-expanded', 'true');
+                    mobileNavPanel.hidden = false;
+                    document.body.classList.add('mobile-nav-open');
+                };
+
+                mobileNavToggle.addEventListener('click', () => {
+                    if (mobileNavToggle.getAttribute('aria-expanded') === 'true') {
+                        closeMobileNav();
+                    } else {
+                        openMobileNav();
+                    }
+                });
+
+                mobileNavPanel.querySelectorAll('a').forEach((link) => {
+                    link.addEventListener('click', closeMobileNav);
+                });
+
+                window.addEventListener('resize', () => {
+                    if (window.innerWidth > 760) {
+                        closeMobileNav();
+                    }
+                });
             }
         });
     </script>
