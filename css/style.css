@@ -2651,6 +2651,14 @@ body.home-page .btn-secondary:hover {
   border-bottom: 1px solid var(--border);
 }
 
+.residence-feature-media {
+  order: 1;
+}
+
+.residence-feature-copy {
+  order: 2;
+}
+
 .residence-feature.alt {
   grid-template-columns: minmax(320px, 0.97fr) minmax(0, 1.03fr);
 }

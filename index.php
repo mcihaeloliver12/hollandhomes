@@ -240,7 +240,7 @@ $bookingValues = [
                     <h2>Built for guests choosing a mood, not just a floor plan.</h2>
                 </div>
                 <div class="home-collection-text fade-in-section">
-                    <p>Some trips call for a sauna, hot tub, cold plunge, and enough room for the whole group. Some call for a quieter coast reset with a dog at your feet. Others should feel unmistakably Palm Springs from the first image to the final night. The portfolio stays intentionally tight so each residence keeps its own personality.</p>
+                    <p>Certain getaways demand the luxury of a sauna, hot tub, cold plunge, and ample space for everyone to gather. Others invite a serene coastal retreat with a furry companion by your side. Then there are those that embody the quintessential Palm Springs vibe from the very first glimpse to the last evening. The selection remains deliberately curated to ensure that each property retains its unique charm.</p>
                 </div>
                 <div id="snapshot" class="home-ledger-list fade-in-section">
                     <?php foreach ($homepageSlugs as $index => $slug): ?>
@@ -282,19 +282,6 @@ $bookingValues = [
                         $details = array_slice($property['detail_blocks'] ?? [], 0, 2);
                     ?>
                     <article class="residence-feature fade-in-section<?php echo $index % 2 === 1 ? ' alt' : ''; ?>">
-                        <div class="residence-feature-media">
-                            <figure class="residence-media-main">
-                                <img src="<?php echo $escape($imageSet[0] ?? hh_main_hero_image($settings)); ?>" alt="<?php echo $escape($property['name'] ?? 'Property'); ?> main photo">
-                            </figure>
-                            <div class="residence-media-stack">
-                                <figure class="residence-media-secondary">
-                                    <img src="<?php echo $escape($imageSet[1] ?? $imageSet[0] ?? hh_main_hero_image($settings)); ?>" alt="<?php echo $escape($property['name'] ?? 'Property'); ?> detail photo">
-                                </figure>
-                                <figure class="residence-media-tertiary">
-                                    <img src="<?php echo $escape($imageSet[2] ?? $imageSet[0] ?? hh_main_hero_image($settings)); ?>" alt="<?php echo $escape($property['name'] ?? 'Property'); ?> gallery photo">
-                                </figure>
-                            </div>
-                        </div>
                         <div class="residence-feature-copy">
                             <div class="residence-feature-heading">
                                 <span class="eyebrow eyebrow-dark"><?php echo $escape($locationLabel); ?></span>
@@ -337,6 +324,19 @@ $bookingValues = [
                             <div class="residence-actions">
                                 <a href="property.php?id=<?php echo $escape($slug); ?>" class="btn">View <?php echo $escape($property['name'] ?? 'Property'); ?></a>
                                 <div class="residence-review-mark"><?php echo $escape($property['badges'][0] ?? 'Guest-loved stay'); ?></div>
+                            </div>
+                        </div>
+                        <div class="residence-feature-media">
+                            <figure class="residence-media-main">
+                                <img src="<?php echo $escape($imageSet[0] ?? hh_main_hero_image($settings)); ?>" alt="<?php echo $escape($property['name'] ?? 'Property'); ?> main photo">
+                            </figure>
+                            <div class="residence-media-stack">
+                                <figure class="residence-media-secondary">
+                                    <img src="<?php echo $escape($imageSet[1] ?? $imageSet[0] ?? hh_main_hero_image($settings)); ?>" alt="<?php echo $escape($property['name'] ?? 'Property'); ?> detail photo">
+                                </figure>
+                                <figure class="residence-media-tertiary">
+                                    <img src="<?php echo $escape($imageSet[2] ?? $imageSet[0] ?? hh_main_hero_image($settings)); ?>" alt="<?php echo $escape($property['name'] ?? 'Property'); ?> gallery photo">
+                                </figure>
                             </div>
                         </div>
                     </article>
