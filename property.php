@@ -192,10 +192,11 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
             position: sticky;
             top: 0;
             z-index: 1000;
-            background: rgba(246,239,231,0.84);
+            background: rgba(246,239,231,0.9);
             transition: all 0.3s ease;
             backdrop-filter: blur(14px);
             border-bottom: 1px solid rgba(27,22,19,0.08);
+            color: var(--hh-text);
         }
 
         #main-header.scrolled {
@@ -221,6 +222,7 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
         .nav-links a {
             position: relative;
             text-decoration: none;
+            color: var(--hh-text);
         }
 
         .nav-links a::after {
@@ -1031,6 +1033,17 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
             transform: translateY(0);
         }
 
+        .about-space-text p {
+            color: var(--hh-muted);
+            font-size: 1.05rem;
+            line-height: 1.85;
+            margin-bottom: 1.2rem;
+        }
+
+        .about-space-text p:last-child {
+            margin-bottom: 0;
+        }
+
         .fade-up {
             animation: heroFadeUp 0.9s ease both;
         }
@@ -1270,6 +1283,7 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
                 <a href="#details">Highlights</a>
                 <a href="#gallery">Gallery</a>
                 <a href="#book">Book</a>
+                <a href="about.php">About Us</a>
             </nav>
         </div>
         <div class="mobile-nav-panel" id="mobile-nav-panel" hidden>
@@ -1279,6 +1293,7 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
                 <a href="#details">Highlights</a>
                 <a href="#gallery">Gallery</a>
                 <a href="#book">Book</a>
+                <a href="about.php">About Us</a>
             </div>
         </div>
     </header>
@@ -1349,6 +1364,7 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
     <div class="container section-tabs-wrap">
         <nav class="section-tabs fade-in-section">
             <a href="#overview">Overview</a>
+            <?php if (!empty($property['about_the_space'])): ?><a href="#about-space">About</a><?php endif; ?>
             <a href="#snapshot">Snapshot</a>
             <a href="#details">Highlights</a>
             <a href="#gallery">Gallery</a>
@@ -1397,6 +1413,32 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
                         </div>
                     </div>
                 </section>
+
+                <?php if (!empty($property['about_the_space'])): ?>
+                <section id="about-space" class="content-card-luxury fade-in-section">
+                    <span class="eyebrow-luxury">About this space</span>
+                    <h2 class="section-title-luxury">Everything you need to know about <?php echo $escape($property['name']); ?></h2>
+                    <div class="about-space-text">
+                        <?php
+                            // Split by double newlines to create blocks
+                            $blocks = preg_split('/\n\s*\n/', trim($property['about_the_space']));
+                            foreach ($blocks as $block):
+                                $block = trim($block);
+                                if ($block !== ''):
+                                    // Process the block: allow strong tags, then nl2br for internal newlines
+                                    // We escape everything except it already contains our controlled <strong> tags
+                                    // For safety, we can escape then unescape the tags we want to keep
+                                    $safe_block = $escape($block);
+                                    $safe_block = str_replace(['&lt;strong&gt;', '&lt;/strong&gt;'], ['<strong>', '</strong>'], $safe_block);
+                        ?>
+                            <p><?php echo nl2br($safe_block); ?></p>
+                        <?php
+                                endif;
+                            endforeach;
+                        ?>
+                    </div>
+                </section>
+                <?php endif; ?>
 
                 <section id="snapshot" class="content-card-luxury fade-in-section">
                     <span class="eyebrow-luxury">Property snapshot</span>
@@ -1698,10 +1740,11 @@ $propertyReviews = $reviewsApi->getPropertyReviews($id);
                 </div>
 
                 <div class="footer-links">
-                    <h4>Source</h4>
+                    <h4>Quick links</h4>
                     <ul>
+                        <li><a href="index.php#properties">Our Properties</a></li>
+                        <li><a href="about.php">About Us</a></li>
                         <li><a href="<?php echo $escape($property['airbnb_url']); ?>" target="_blank" rel="noopener noreferrer">Airbnb Listing</a></li>
-                        <li><a href="index.php#snapshot">Homepage Snapshot</a></li>
                     </ul>
                 </div>
             </div>

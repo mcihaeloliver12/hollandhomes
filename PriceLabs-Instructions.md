@@ -28,11 +28,28 @@ If something still looks off, check the following:
 3. **Clear the cache manually** — Delete `cache/pricelabs_listings.json` to force a fresh fetch on the next page load.
 4. **Check PHP error logs** — The code logs curl errors via `error_log()`. Check your server's PHP error log for lines starting with `PriceLabs API curl error:`.
 
+## March 2026 Update — Per-Day Pricing Endpoint Removed
+
+- ✅ **`/v1/listings` still works** with the Customer API key and populates the “starting nightly rate”.
+- ❌ **`/v1/pricing` now returns HTTP 404** for every listing ID we pass (verified via cURL).
+
+PriceLabs’ newer documentation (Dynamic Pricing API + SwaggerHub connector) shows a **different integration path** for PMS/website partners. That confirms the old Customer API’s `/v1/pricing` route has either been deprecated or requires a different auth/product tier.
+
+### Impact
+- The homepage + property hero cards continue to show **live starting rates**.
+- The **calendar + checkout nightly breakdown** fall back to static/base pricing because no nightly feed is available.
+
+### What needs to happen
+1. **Contact PriceLabs support** (reference the Customer API and the new Dynamic Pricing API page) and ask which endpoint replaces `/v1/pricing` for nightly ranges.
+2. Confirm whether our existing Customer API key can access the new endpoint or if we need the “Dynamic Pricing API / connector” credentials.
+3. Once we have the correct endpoint + auth scheme, update `PriceLabsAPI.php` so `getPricingData()` calls the supported route.
+
 ## What You May Need To Do
 
 - **If everything looks fine now:** No action needed.
 - **If prices look stale:** Delete `cache/pricelabs_listings.json` and reload a property page.
 - **If you changed PriceLabs plans or API keys:** Update `PRICELABS_API_TOKEN` in `includes/config.php`.
+- **For per-day pricing:** Share the 404 evidence with PriceLabs support and request access to the replacement nightly-pricing endpoint documented in their Dynamic Pricing API / SwaggerHub materials.
 - **Let me know specifically what looks wrong** so I can dig deeper into the exact symptom.
 
 ---
