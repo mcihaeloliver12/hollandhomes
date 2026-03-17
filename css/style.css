@@ -3247,6 +3247,18 @@ body.home-page .btn-secondary:hover {
   margin-top: 1rem;
 }
 
+.btn-accent {
+  background: var(--airbnb-pink);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 18px 35px rgba(255, 90, 95, 0.35);
+}
+
+.btn-accent:hover {
+  background: var(--airbnb-pink-dark);
+  transform: translateY(-3px);
+}
+
 .btn-outline {
   background: transparent;
   border-color: rgba(255, 255, 255, 0.3);
