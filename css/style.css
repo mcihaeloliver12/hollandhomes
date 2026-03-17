@@ -3131,8 +3131,8 @@ body.home-page .btn-secondary:hover {
 .home-hero-premium {
   position: relative;
   width: 100%;
-  height: 100svh;
-  min-height: 700px;
+  height: min(92svh, 840px);
+  min-height: 600px;
   overflow: hidden;
   background: var(--bg-dark);
 }
@@ -3145,10 +3145,11 @@ body.home-page .btn-secondary:hover {
 
 .home-hero-bg img {
   width: 100%;
-  height: 100%;
+  height: 130%;
   object-fit: cover;
-  transform: scale(1.05);
-  filter: brightness(0.85);
+  object-position: center 0%;
+  transform: translateY(-10%) scale(1.04);
+  filter: brightness(0.9);
   animation: hero-zoom 20s infinite alternate ease-in-out;
 }
 
@@ -3170,22 +3171,23 @@ body.home-page .btn-secondary:hover {
   flex-direction: column;
   justify-content: center;
   background:
-    linear-gradient(180deg, rgba(23, 21, 19, 0.4) 0%, rgba(23, 21, 19, 0.1) 50%, rgba(23, 21, 19, 0.6) 100%),
-    radial-gradient(circle at 20% 50%, rgba(23, 21, 19, 0.4) 0%, transparent 60%);
+    linear-gradient(180deg, rgba(23, 21, 19, 0.55) 0%, rgba(23, 21, 19, 0.25) 55%, rgba(23, 21, 19, 0.78) 100%),
+    radial-gradient(circle at 18% 55%, rgba(23, 21, 19, 0.45) 0%, transparent 60%);
   color: var(--text-on-dark);
 }
 
 .hero-content {
-  display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
+  display: flex;
   align-items: flex-end;
-  gap: 4rem;
-  padding-bottom: 4rem;
+  justify-content: flex-start;
+  min-height: 70svh;
+  padding-bottom: 3rem;
 }
 
 .hero-text-wrap {
   display: grid;
-  gap: 1.5rem;
+  gap: 1.4rem;
+  max-width: min(640px, 90%);
 }
 
 .hero-text-wrap>* {
@@ -3206,10 +3208,6 @@ body.home-page .btn-secondary:hover {
 
 .hero-text-wrap .hero-actions {
   animation-delay: 0.8s;
-}
-
-.hero-stats-grid {
-  animation: fadeUp 1s ease both 1s;
 }
 
 .hero-scroll-indicator {
@@ -3243,7 +3241,7 @@ body.home-page .btn-secondary:hover {
 
 .hero-actions {
   display: flex;
-  gap: 1rem;
+  gap: 0.8rem;
   margin-top: 1rem;
 }
 
@@ -3261,46 +3259,16 @@ body.home-page .btn-secondary:hover {
 
 .btn-outline {
   background: transparent;
-  border-color: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
   color: #fff;
 }
 
 .btn-outline:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
   border-color: #fff;
 }
 
-.hero-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 2rem;
-  padding: 2.5rem;
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  animation: fadeUp 1s ease both 1s;
-}
-
-.hero-stat-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.hero-stat-num {
-  font-family: var(--font-display);
-  font-size: clamp(2.5rem, 4vw, 3.5rem);
-  font-weight: 700;
-  line-height: 1;
-  color: var(--accent-soft);
-}
-
-.hero-stat-label {
-  font-size: 0.75rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
-}
+/* hero stat module removed in favor of streamlined CTA */
 
 .hero-scroll-indicator {
   position: absolute;
@@ -3344,15 +3312,7 @@ body.home-page .btn-secondary:hover {
 
 @media (max-width: 991px) {
   .hero-content {
-    grid-template-columns: 1fr;
-    gap: 3rem;
-  }
-
-  .hero-stats-grid {
-    border-left: none;
-    padding-left: 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.15);
-    padding-top: 2rem;
+    min-height: auto;
   }
 }
 
@@ -3363,6 +3323,7 @@ body.home-page .btn-secondary:hover {
 
   .hero-actions {
     flex-direction: column;
+    gap: 0.6rem;
   }
 
   .hero-actions .btn {
@@ -3378,7 +3339,7 @@ body.home-page .btn-secondary:hover {
 .home-property-cards {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1.5rem;
+  gap: clamp(1.6rem, 2vw, 2.4rem);
 }
 
 .home-property-card-link {
@@ -3393,6 +3354,7 @@ body.home-page .btn-secondary:hover {
   box-shadow: var(--shadow-md);
   overflow: hidden;
   transition: transform var(--transition), box-shadow var(--transition);
+  border-radius: 16px;
 }
 
 .home-property-card-full:hover {
@@ -3430,6 +3392,7 @@ body.home-page .btn-secondary:hover {
 .home-property-card-body p {
   color: var(--text-secondary);
   line-height: 1.7;
+  margin: 0;
 }
 
 .home-property-card-meta {
@@ -3454,26 +3417,15 @@ body.home-page .btn-secondary:hover {
 @media (max-width: 1100px) {
   .home-property-cards {
     grid-template-columns: 1fr;
-    max-width: 36rem;
+    max-width: 40rem;
     margin: 0 auto;
   }
 }
 
 @media (max-width: 760px) {
-  .home-hero-simple {
-    min-height: clamp(24rem, 85svh, 32rem);
-  }
-
-  .home-hero-simple-image {
-    height: 100%;
-  }
-
-  .home-hero-simple-overlay h1 {
-    font-size: clamp(2.6rem, 14vw, 4.8rem);
-  }
-
   .home-property-cards {
     max-width: 100%;
+    gap: 2.8rem;
   }
 }
 
@@ -3576,8 +3528,12 @@ body.about-page .nav-links {
 .about-body p {
   color: var(--text-secondary);
   font-size: clamp(1.05rem, 0.8vw + 0.92rem, 1.22rem);
-  line-height: 1.82;
-  margin-bottom: 1.5rem;
+  line-height: 1.85;
+  margin-bottom: 2rem;
+}
+
+.about-body p + p {
+  margin-top: 0.3rem;
 }
 
 .about-body h2 {

@@ -82,7 +82,7 @@ function hh_site_data() {
                 'guest_review' => 'This place is incredible, the sauna, hot tub, and cold plunge made our group trip unforgettable. Plenty of space for everyone and the host thought of everything.',
                 'guest_review_name' => 'James',
                 'hero_image' => 'Home/Photos/89432698-1ac9-4b8f-9c5e-1a0813646f64.jpeg',
-                'card_image' => 'Home/Photos/99758d42-2e67-440c-bf0f-b71d0c89b21e.jpeg',
+                'card_image' => 'Home/Photos/79de0936-dc9c-4823-87ab-dd5344217580.jpg',
                 'airbnb_url' => 'https://www.airbnb.com/rooms/49479938',
                 'fallback_airbnb' => [
                     'title' => 'Oasis in Rockaway Beach · ★4.99 · 6 bedrooms · 8 beds · 3 baths',

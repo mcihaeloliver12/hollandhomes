@@ -180,19 +180,8 @@ $bookingValues = [
                         <h1>Holland <i>Homes</i></h1>
                         <p>Elevated vacation rentals with a stronger sense of place.</p>
                         <div class="hero-actions">
-                            <a href="property.php?id=<?php echo $escape($defaultSlug); ?>#booking" class="btn btn-accent">Book Now</a>
                             <a href="#properties" class="btn">Explore Properties</a>
-                            <a href="about.php" class="btn btn-outline">Our Story</a>
-                        </div>
-                    </div>
-                    <div class="hero-stats-grid">
-                        <div class="hero-stat-item">
-                            <span class="hero-stat-num">03</span>
-                            <span class="hero-stat-label">Boutique Stays</span>
-                        </div>
-                        <div class="hero-stat-item">
-                            <span class="hero-stat-num">5.0</span>
-                            <span class="hero-stat-label">Avg Rating</span>
+                            <a href="property.php?id=<?php echo $escape($defaultSlug); ?>#booking" class="btn btn-outline">Book Now</a>
                         </div>
                     </div>
                 </div>
